@@ -7,17 +7,17 @@ part of 'user_model.dart';
 // **************************************************************************
 
 UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
-  id: (json['id'] as num).toInt(),
-  email: json['email'] as String,
-  username: json['username'] as String,
-  photoPath: json['photoPath'] as String?,
-  isVerified: json['isVerified'] as String?,
+  id: const SafeIntConverter().fromJson(json['id']),
+  email: const SafeStringConverter().fromJson(json['email']),
+  username: const SafeUsernameConverter().fromJson(json['username']),
+  photoPath: json['photo_path'] as String?,
+  isVerified: json['is_verified'] as String?,
 );
 
 Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
-  'id': instance.id,
-  'email': instance.email,
-  'username': instance.username,
-  'photoPath': instance.photoPath,
-  'isVerified': instance.isVerified,
+  'id': const SafeIntConverter().toJson(instance.id),
+  'email': const SafeStringConverter().toJson(instance.email),
+  'username': const SafeUsernameConverter().toJson(instance.username),
+  'photo_path': instance.photoPath,
+  'is_verified': instance.isVerified,
 };

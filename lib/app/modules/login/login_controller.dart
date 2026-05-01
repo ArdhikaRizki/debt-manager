@@ -79,10 +79,15 @@ class LoginController extends GetxController {
           await AuthStorage.saveToken(token);
         }
 
-        // Simpan user data
-        final user = body['user'] as Map<String, dynamic>?;
-        if (user != null) {
-          await AuthStorage.saveUser(user);
+        // Simpan user data — backend kirim response['data'], bukan response['user']
+        final rawUser = body['data'] as Map<String, dynamic>?;
+        if (rawUser != null) {
+          // Normalisasi: pastikan selalu ada key 'id'
+          final normalized = Map<String, dynamic>.from(rawUser);
+          if (!normalized.containsKey('id') || normalized['id'] == null) {
+            normalized['id'] = rawUser['user_id'] ?? rawUser['userId'] ?? 0;
+          }
+          await AuthStorage.saveUser(normalized);
         }
 
         Get.snackbar(
