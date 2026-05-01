@@ -9,7 +9,9 @@ import '../modules/group/group_view.dart';
 import '../modules/home/home_binding.dart';
 import '../modules/home/home_view.dart';
 import '../modules/login/login_view.dart';
+import '../modules/profile/profile_view.dart';
 import '../modules/singup/signup_view.dart';
+import '../modules/timezone/timezone_view.dart';
 import '../modules/welcome/welcome_view.dart';
 import 'app_routes.dart';
 
@@ -51,6 +53,14 @@ class AppPages {
       name: AppRoutes.groupDetail,
       page: () => const GroupDetailView(),
       binding: GroupDetailBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.profile,
+      page: () => const ProfileView(),
+    ),
+    GetPage(
+      name: AppRoutes.timezone,
+      page: () => const TimezoneView(),
     ),
   ];
 }

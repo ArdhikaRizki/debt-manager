@@ -4,9 +4,11 @@ import 'package:get/get.dart';
 import '../../data/models/debt_model.dart';
 import '../../data/services/api_service.dart';
 import '../../data/services/auth_storage.dart';
+import '../../../core/utils/proximity_service.dart';
 
 class HomeController extends GetxController {
   late final ApiService _api;
+  late final ProximityService _proximitySvc;
 
   final recentDebts = <DebtModel>[].obs;
   final isLoading = false.obs;
@@ -44,6 +46,11 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     _api = Get.find<ApiService>();
+
+    // Inisialisasi proximity sensor
+    _proximitySvc = Get.put(ProximityService());
+    _proximitySvc.startListening();
+
     fetchDashboard();
   }
 
@@ -79,4 +86,11 @@ class HomeController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  @override
+  void onClose() {
+    _proximitySvc.stopListening();
+    super.onClose();
+  }
 }
+

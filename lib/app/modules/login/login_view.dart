@@ -131,6 +131,59 @@ class LoginView extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: 8),
+
+                  // --- BIOMETRIC LOGIN BUTTON ---
+                  Obx(() => controller.isBiometricAvailable.value
+                    ? Column(
+                        children: [
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(child: Divider(color: AppColors.textGrey.withOpacity(0.3))),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                child: Text("atau", style: TextStyle(color: AppColors.textGrey, fontSize: 13)),
+                              ),
+                              Expanded(child: Divider(color: AppColors.textGrey.withOpacity(0.3))),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          GestureDetector(
+                            onTap: controller.loginWithBiometric,
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryTeal.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: AppColors.primaryTeal.withOpacity(0.3),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.fingerprint,
+                                    size: 40,
+                                    color: AppColors.primaryTeal,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  "Login dengan Sidik Jari",
+                                  style: TextStyle(
+                                    color: AppColors.primaryTeal,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+                  ),
                 ],
               ),
             ),

@@ -4,19 +4,34 @@ import 'package:get/get.dart';
 import '../../data/services/api_service.dart';
 import '../../data/services/auth_storage.dart';
 import '../../routes/app_routes.dart';
+import '../../../core/utils/biometric_controller.dart';
 
 class LoginController extends GetxController {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   final isLoading = false.obs;
+  final isBiometricAvailable = false.obs;
 
   late final ApiService _apiService;
+  late final BiometricController _biometricC;
 
   @override
   void onInit() {
     super.onInit();
     _apiService = Get.put(ApiService());
+    _biometricC = Get.put(BiometricController());
+    _checkBiometric();
+  }
+
+  /// Cek apakah ada biometrik yang sudah diaktifkan
+  Future<void> _checkBiometric() async {
+    isBiometricAvailable.value = await _biometricC.hasBiometricEnabled();
+  }
+
+  /// Login menggunakan sidik jari
+  Future<void> loginWithBiometric() async {
+    await _biometricC.loginWithBiometric();
   }
 
   Future<void> login() async {

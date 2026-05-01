@@ -364,6 +364,10 @@ class HomeView extends GetView<HomeController> {
             Get.toNamed(AppRoutes.group);
             break;
           case 3:
+            Get.toNamed(AppRoutes.timezone);
+            break;
+          case 4:
+            Get.toNamed(AppRoutes.profile);
             break;
         }
       },
@@ -374,6 +378,8 @@ class HomeView extends GetView<HomeController> {
             icon: Icon(Icons.receipt_long_outlined), label: 'Hutang'),
         BottomNavigationBarItem(
             icon: Icon(Icons.group_outlined), label: 'Grup'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.access_time_rounded), label: 'Waktu'),
         BottomNavigationBarItem(
             icon: Icon(Icons.person_outline_rounded), label: 'Profil'),
       ],
