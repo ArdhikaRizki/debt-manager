@@ -11,6 +11,9 @@ import '../modules/home/home_view.dart';
 import '../modules/login/login_view.dart';
 import '../modules/profile/profile_view.dart';
 import '../modules/singup/signup_view.dart';
+import '../modules/currency/currency_binding.dart';
+import '../modules/currency/currency_view.dart';
+import '../modules/timezone/timezone_binding.dart';
 import '../modules/timezone/timezone_view.dart';
 import '../modules/welcome/welcome_view.dart';
 import 'app_routes.dart';
@@ -61,6 +64,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.timezone,
       page: () => const TimezoneView(),
+      binding: TimezoneBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.currency,
+      page: () => const CurrencyView(),
+      binding: CurrencyBinding(),
     ),
   ];
 }

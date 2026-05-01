@@ -5,21 +5,19 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'timezone_controller.dart';
 
-class TimezoneView extends StatelessWidget {
+class TimezoneView extends GetView<TimezoneController> {
   const TimezoneView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(TimezoneController());
-
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4F8),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
             _buildHeader(),
-            SliverToBoxAdapter(child: _buildLiveClocks(controller)),
-            SliverToBoxAdapter(child: _buildConverterCard(controller, context)),
+            SliverToBoxAdapter(child: _buildLiveClocks()),
+            SliverToBoxAdapter(child: _buildConverterCard(context)),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
         ),
@@ -46,6 +44,12 @@ class TimezoneView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Tombol back
+            GestureDetector(
+              onTap: () => Get.back(),
+              child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+            ),
+            const SizedBox(height: 12),
             const Text(
               '🕐 Konversi Waktu',
               style: TextStyle(
@@ -55,10 +59,10 @@ class TimezoneView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Obx(() => Text(
+            Text(
               'Hari ini · ${DateFormat('EEEE, d MMMM yyyy', 'id').format(DateTime.now())}',
               style: const TextStyle(color: Colors.white70, fontSize: 13),
-            )),
+            ),
           ],
         ),
       ),
@@ -66,7 +70,7 @@ class TimezoneView extends StatelessWidget {
   }
 
   // ─── LIVE CLOCKS ───────────────────────────────────────────────────────────
-  Widget _buildLiveClocks(TimezoneController c) {
+  Widget _buildLiveClocks() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       child: Column(
@@ -88,7 +92,7 @@ class TimezoneView extends StatelessWidget {
               Expanded(child: Obx(() => _ClockCard(
                 label: 'WIB',
                 sublabel: 'UTC+7',
-                time: c.wibTime.value,
+                time: controller.wibTime.value,
                 emoji: '🏙️',
                 color: const Color(0xFF2EC4B6),
               ))),
@@ -96,7 +100,7 @@ class TimezoneView extends StatelessWidget {
               Expanded(child: Obx(() => _ClockCard(
                 label: 'WITA',
                 sublabel: 'UTC+8',
-                time: c.witaTime.value,
+                time: controller.witaTime.value,
                 emoji: '🌴',
                 color: const Color(0xFF6C63FF),
               ))),
@@ -108,15 +112,15 @@ class TimezoneView extends StatelessWidget {
               Expanded(child: Obx(() => _ClockCard(
                 label: 'WIT',
                 sublabel: 'UTC+9',
-                time: c.witTime.value,
+                time: controller.witTime.value,
                 emoji: '🦜',
                 color: const Color(0xFFF7931A),
               ))),
               const SizedBox(width: 10),
               Expanded(child: Obx(() => _ClockCard(
-                label: c.londonLabel.value,
+                label: controller.londonLabel.value,
                 sublabel: 'UTC+0/+1',
-                time: c.londonTime.value,
+                time: controller.londonTime.value,
                 emoji: '🎡',
                 color: const Color(0xFFE53935),
               ))),
@@ -128,7 +132,7 @@ class TimezoneView extends StatelessWidget {
   }
 
   // ─── CONVERTER CARD ────────────────────────────────────────────────────────
-  Widget _buildConverterCard(TimezoneController c, BuildContext context) {
+  Widget _buildConverterCard(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       child: Container(
@@ -156,21 +160,19 @@ class TimezoneView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Zona sumber
             const Text('Dari zona waktu:', style: TextStyle(color: AppColors.textGrey, fontSize: 13)),
             const SizedBox(height: 8),
             Obx(() => SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: c.zones.map((zone) {
-                  final selected = c.selectedSourceZone.value == zone;
+                children: controller.zones.map((zone) {
+                  final selected = controller.selectedSourceZone.value == zone;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: GestureDetector(
                       onTap: () {
-                        c.selectedSourceZone.value = zone;
-                        c.convertTime();
+                        controller.selectedSourceZone.value = zone;
+                        controller.convertTime();
                       },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
@@ -195,14 +197,11 @@ class TimezoneView extends StatelessWidget {
                 }).toList(),
               ),
             )),
-
             const SizedBox(height: 16),
-
-            // Input waktu
             const Text('Pilih waktu:', style: TextStyle(color: AppColors.textGrey, fontSize: 13)),
             const SizedBox(height: 8),
             GestureDetector(
-              onTap: () => c.pickTime(context),
+              onTap: () => controller.pickTime(context),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -216,7 +215,7 @@ class TimezoneView extends StatelessWidget {
                     const Icon(Icons.access_time_rounded, color: Color(0xFF6C63FF), size: 20),
                     const SizedBox(width: 10),
                     Obx(() => Text(
-                      '${c.inputHour.value.toString().padLeft(2, '0')}:${c.inputMinute.value.toString().padLeft(2, '0')}',
+                      '${controller.inputHour.value.toString().padLeft(2, '0')}:${controller.inputMinute.value.toString().padLeft(2, '0')}',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -232,12 +231,9 @@ class TimezoneView extends StatelessWidget {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
             const Divider(),
             const SizedBox(height: 12),
-
-            // Hasil konversi
             const Text(
               'Hasil Konversi:',
               style: TextStyle(
@@ -247,13 +243,12 @@ class TimezoneView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-
             Obx(() => Column(
               children: [
-                _ResultRow(zone: 'WIB',    sublabel: 'UTC+7', time: c.convertedWib.value,    color: const Color(0xFF2EC4B6), emoji: '🏙️'),
-                _ResultRow(zone: 'WITA',   sublabel: 'UTC+8', time: c.convertedWita.value,   color: const Color(0xFF6C63FF), emoji: '🌴'),
-                _ResultRow(zone: 'WIT',    sublabel: 'UTC+9', time: c.convertedWit.value,    color: const Color(0xFFF7931A), emoji: '🦜'),
-                _ResultRow(zone: c.londonLabel.value, sublabel: 'UK', time: c.convertedLondon.value, color: const Color(0xFFE53935), emoji: '🎡'),
+                _ResultRow(zone: 'WIB',    sublabel: 'UTC+7', time: controller.convertedWib.value,    color: const Color(0xFF2EC4B6), emoji: '🏙️'),
+                _ResultRow(zone: 'WITA',   sublabel: 'UTC+8', time: controller.convertedWita.value,   color: const Color(0xFF6C63FF), emoji: '🌴'),
+                _ResultRow(zone: 'WIT',    sublabel: 'UTC+9', time: controller.convertedWit.value,    color: const Color(0xFFF7931A), emoji: '🦜'),
+                _ResultRow(zone: controller.londonLabel.value, sublabel: 'UK', time: controller.convertedLondon.value, color: const Color(0xFFE53935), emoji: '🎡'),
               ],
             )),
           ],

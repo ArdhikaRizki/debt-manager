@@ -350,8 +350,8 @@ class HomeView extends GetView<HomeController> {
       selectedItemColor: AppColors.primaryTeal,
       unselectedItemColor: AppColors.textGrey,
       backgroundColor: Colors.white,
-      selectedFontSize: 11,
-      unselectedFontSize: 11,
+      selectedFontSize: 10,
+      unselectedFontSize: 10,
       currentIndex: 0,
       onTap: (index) {
         switch (index) {
@@ -367,6 +367,9 @@ class HomeView extends GetView<HomeController> {
             Get.toNamed(AppRoutes.timezone);
             break;
           case 4:
+            Get.toNamed(AppRoutes.currency);
+            break;
+          case 5:
             Get.toNamed(AppRoutes.profile);
             break;
         }
@@ -380,6 +383,8 @@ class HomeView extends GetView<HomeController> {
             icon: Icon(Icons.group_outlined), label: 'Grup'),
         BottomNavigationBarItem(
             icon: Icon(Icons.access_time_rounded), label: 'Waktu'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.currency_exchange_rounded), label: 'Kurs'),
         BottomNavigationBarItem(
             icon: Icon(Icons.person_outline_rounded), label: 'Profil'),
       ],

@@ -9,4 +9,5 @@ abstract class AppRoutes {
   static const groupDetail = '/group/detail';
   static const profile = '/profile';
   static const timezone = '/timezone';
+  static const currency = '/currency';
 }

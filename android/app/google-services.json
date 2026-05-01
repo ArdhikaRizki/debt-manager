@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "419641019735",
+    "project_id": "debt-manager-489ae",
+    "storage_bucket": "debt-manager-489ae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:419641019735:android:320717fd49a0f9ab4fc212",
+        "android_client_info": {
+          "package_name": "com.example.debt_manager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZSrc0UPy_Y3xxct1cuefcargye6K88i0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

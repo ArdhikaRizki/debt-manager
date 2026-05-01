@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/theme/app_colors.dart';
 import 'profile_controller.dart';
 
 class ProfileView extends StatelessWidget {
@@ -24,7 +25,7 @@ class ProfileView extends StatelessWidget {
                   child: Container(
                     height: 220,
                     width: double.infinity,
-                    color: const Color(0xFFFF8A8A),
+                    color: AppColors.primaryTeal,
                   ),
                 ),
                 Positioned(
@@ -75,7 +76,7 @@ class ProfileView extends StatelessWidget {
                           right: 0,
                           child: Container(
                             padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(color: Color(0xFFFF8A8A), shape: BoxShape.circle),
+                            decoration: const BoxDecoration(color: AppColors.primaryTeal, shape: BoxShape.circle),
                             child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
                           ),
                         )
@@ -90,7 +91,7 @@ class ProfileView extends StatelessWidget {
 
             // --- INFO USER (Reactive dengan Obx) ---
             Obx(() => Text(controller.username.value,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF333333)),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textDark),
             )),
             const SizedBox(height: 5),
             Obx(() => Text(controller.bio.value,
@@ -129,16 +130,16 @@ class ProfileView extends StatelessWidget {
                       ],
                     ),
                     child: Obx(() => SwitchListTile(
-                      activeColor: const Color(0xFFFF8A8A),
+                      activeColor: AppColors.primaryTeal,
                       secondary: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF8A8A).withOpacity(0.1),
+                          color: AppColors.primaryTeal.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.fingerprint, color: Color(0xFFFF8A8A)),
+                        child: const Icon(Icons.fingerprint, color: AppColors.primaryTeal),
                       ),
-                      title: const Text("Login Biometrik", style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF333333))),
+                      title: const Text("Login Biometrik", style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textDark)),
                       value: controller.isBiometricActive.value,
                       onChanged: (bool value) => controller.toggleBiometric(value),
                     )),
@@ -169,11 +170,11 @@ class ProfileView extends StatelessWidget {
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: const Color(0xFFFF8A8A).withOpacity(0.1), shape: BoxShape.circle),
-          child: Icon(icon, color: const Color(0xFFFF8A8A)),
+          decoration: BoxDecoration(color: AppColors.primaryTeal.withOpacity(0.1), shape: BoxShape.circle),
+          child: Icon(icon, color: AppColors.primaryTeal),
         ),
         title: Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        subtitle: Text(subtitle, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF333333))),
+        subtitle: Text(subtitle, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textDark)),
       ),
     );
   }
@@ -192,12 +193,12 @@ class ProfileView extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: isLogout ? Colors.red.withOpacity(0.1) : const Color(0xFFFF8A8A).withOpacity(0.1),
+            color: isLogout ? Colors.red.withOpacity(0.1) : AppColors.primaryTeal.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: isLogout ? Colors.red : const Color(0xFFFF8A8A)),
+          child: Icon(icon, color: isLogout ? Colors.red : AppColors.primaryTeal),
         ),
-        title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: isLogout ? Colors.red : const Color(0xFF333333))),
+        title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: isLogout ? Colors.red : AppColors.textDark)),
         trailing: isLogout ? null : const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       ),
     );
