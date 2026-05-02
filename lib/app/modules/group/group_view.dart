@@ -208,82 +208,265 @@ class GroupView extends GetView<GroupController> {
   void _showCreateGroupSheet(BuildContext context) {
     final nameCtrl = TextEditingController();
     final descCtrl = TextEditingController();
+    final searchCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
+    // Local state dikelola dengan StatefulBuilder
+    final List<String> members = [];
+    String searchError = '';
+    bool isSearching = false;
+
     Get.bottomSheet(
-      Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-        ),
-        child: SingleChildScrollView(
-          child: Form(
-            key: formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(2)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text('Buat Grup Baru',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textDark)),
-                const SizedBox(height: 20),
-                _buildSheetField(
-                  controller: nameCtrl,
-                  label: 'Nama Grup',
-                  hint: 'Contoh: Kost Bahagia',
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Nama wajib diisi' : null,
-                ),
-                _buildSheetField(
-                  controller: descCtrl,
-                  label: 'Deskripsi (opsional)',
-                  hint: 'Deskripsi singkat...',
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (!formKey.currentState!.validate()) return;
-                      Get.back();
-                      await controller.createGroup(
-                          nameCtrl.text.trim(), descCtrl.text.trim());
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryTeal,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('Buat Grup',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
+      StatefulBuilder(
+        builder: (ctx, setState) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
-          ),
-        ),
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
+            child: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Drag handle
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(2)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Buat Grup Baru',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textDark)),
+                    const SizedBox(height: 20),
+
+                    // ── Nama & Deskripsi ──────────────────
+                    _buildSheetField(
+                      controller: nameCtrl,
+                      label: 'Nama Grup',
+                      hint: 'Contoh: Kost Bahagia',
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? 'Nama wajib diisi' : null,
+                    ),
+                    _buildSheetField(
+                      controller: descCtrl,
+                      label: 'Deskripsi (opsional)',
+                      hint: 'Deskripsi singkat...',
+                    ),
+
+                    // ── Section Anggota ───────────────────
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Anggota',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                color: AppColors.textDark)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                              color: AppColors.primaryTeal.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8)),
+                          child: Text(
+                            '${members.length + 1} anggota',
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primaryTeal),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    // ── Search bar ────────────────────────
+                    Row(children: [
+                      Expanded(
+                        child: TextField(
+                          controller: searchCtrl,
+                          autocorrect: false,
+                          textInputAction: TextInputAction.search,
+                          onSubmitted: (_) async {
+                            final q = searchCtrl.text.trim();
+                            if (q.isEmpty) return;
+                            setState(() {
+                              isSearching = true;
+                              searchError = '';
+                            });
+                            final found =
+                                await controller.searchUser(q);
+                            setState(() => isSearching = false);
+                            if (found == null) {
+                              setState(() =>
+                                  searchError = 'User "$q" tidak ditemukan');
+                            } else if (found == controller.currentUsername) {
+                              setState(() => searchError =
+                                  'Kamu otomatis jadi anggota');
+                            } else if (members.contains(found)) {
+                              setState(
+                                  () => searchError = '@$found sudah ditambahkan');
+                            } else {
+                              setState(() {
+                                members.add(found);
+                                searchCtrl.clear();
+                                searchError = '';
+                              });
+                            }
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Cari username (tekan Enter)...',
+                            hintStyle:
+                                const TextStyle(color: AppColors.textGrey),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 12),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10)),
+                              borderSide: BorderSide(
+                                  color: AppColors.primaryTeal, width: 1.5),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Tombol Search
+                      GestureDetector(
+                        onTap: isSearching
+                            ? null
+                            : () async {
+                                final q = searchCtrl.text.trim();
+                                if (q.isEmpty) return;
+                                setState(() {
+                                  isSearching = true;
+                                  searchError = '';
+                                });
+                                final found =
+                                    await controller.searchUser(q);
+                                setState(() => isSearching = false);
+                                if (found == null) {
+                                  setState(() => searchError =
+                                      'User "$q" tidak ditemukan');
+                                } else if (found ==
+                                    controller.currentUsername) {
+                                  setState(() => searchError =
+                                      'Kamu otomatis jadi anggota');
+                                } else if (members.contains(found)) {
+                                  setState(() =>
+                                      searchError = '@$found sudah ditambahkan');
+                                } else {
+                                  setState(() {
+                                    members.add(found);
+                                    searchCtrl.clear();
+                                    searchError = '';
+                                  });
+                                }
+                              },
+                        child: Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            color: isSearching
+                                ? Colors.grey.shade300
+                                : AppColors.textDark,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: isSearching
+                              ? const Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2.5))
+                              : const Icon(Icons.search_rounded,
+                                  color: Colors.white),
+                        ),
+                      ),
+                    ]),
+
+                    // Error text
+                    if (searchError.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(searchError,
+                          style: TextStyle(
+                              color: Colors.red.shade600, fontSize: 12)),
+                    ],
+                    const SizedBox(height: 12),
+
+                    // ── Creator card (Saya) ───────────────
+                    _MemberCard(
+                      username: controller.currentUsername.isNotEmpty
+                          ? controller.currentUsername
+                          : 'Saya',
+                      isCreator: true,
+                    ),
+
+                    // ── Added members ─────────────────────
+                    ...members.map((uname) => _MemberCard(
+                          username: uname,
+                          isCreator: false,
+                          onRemove: () =>
+                              setState(() => members.remove(uname)),
+                        )),
+
+                    const SizedBox(height: 20),
+
+                    // ── Tombol Buat ───────────────────────
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (!formKey.currentState!.validate()) return;
+                          Get.back();
+                          await controller.createGroup(
+                            nameCtrl.text.trim(),
+                            descCtrl.text.trim(),
+                            memberUsernames: List.from(members),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryTeal,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Buat Grup',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
       isScrollControlled: true,
     );
@@ -329,6 +512,104 @@ class GroupView extends GetView<GroupController> {
         ),
         const SizedBox(height: 14),
       ],
+    );
+  }
+}
+
+// ─── _MemberCard Widget ─────────────────────────────────
+class _MemberCard extends StatelessWidget {
+  final String username;
+  final bool isCreator;
+  final VoidCallback? onRemove;
+
+  const _MemberCard({
+    required this.username,
+    required this.isCreator,
+    this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isCreator
+            ? AppColors.primaryTeal.withValues(alpha: 0.08)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isCreator
+              ? AppColors.primaryTeal.withValues(alpha: 0.3)
+              : Colors.grey.shade200,
+        ),
+      ),
+      child: Row(children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isCreator
+                  ? [AppColors.primaryTeal, AppColors.primaryBlue]
+                  : [Colors.grey.shade400, Colors.grey.shade600],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(
+              username.isNotEmpty ? username[0].toUpperCase() : '?',
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('@$username',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: AppColors.textDark)),
+              if (isCreator)
+                const Text('Kamu (Admin)',
+                    style: TextStyle(
+                        fontSize: 11, color: AppColors.primaryTeal)),
+            ],
+          ),
+        ),
+        if (isCreator)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.primaryTeal.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Text('ADMIN',
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryTeal)),
+          )
+        else
+          GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                  color: Colors.red.shade50, shape: BoxShape.circle),
+              child: Icon(Icons.close_rounded,
+                  size: 16, color: Colors.red.shade400),
+            ),
+          ),
+      ]),
     );
   }
 }

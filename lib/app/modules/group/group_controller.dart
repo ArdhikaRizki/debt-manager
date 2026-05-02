@@ -24,6 +24,11 @@ class GroupController extends GetxController {
     return 0;
   }
 
+  String get currentUsername {
+    final user = AuthStorage.getUser();
+    return user?['username'] as String? ?? '';
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -65,7 +70,38 @@ class GroupController extends GetxController {
     }
   }
 
-  Future<void> createGroup(String name, String? description) async {
+  /// Cari user by username — returns username string atau null jika tidak ditemukan
+  Future<String?> searchUser(String username) async {
+    final token = AuthStorage.getToken();
+    if (token == null) return null;
+    try {
+      final res = await _api.searchUser(username, token);
+      if (res.statusCode == 200 && res.body != null) {
+        final body = res.body as Map<String, dynamic>;
+        final data = body['data'];
+        if (data is List && data.isNotEmpty) {
+          final exact = data.firstWhere(
+            (u) =>
+                (u['username'] as String?)?.toLowerCase() ==
+                username.toLowerCase(),
+            orElse: () => data.first,
+          );
+          return exact['username'] as String?;
+        }
+        return null;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Buat grup dan langsung tambahkan members
+  Future<void> createGroup(
+    String name,
+    String? description, {
+    List<String> memberUsernames = const [],
+  }) async {
     final token = AuthStorage.getToken();
     if (token == null) return;
 
@@ -76,6 +112,23 @@ class GroupController extends GetxController {
       }
       final res = await _api.createGroup(body, token);
       if (res.statusCode == 200 || res.statusCode == 201) {
+        final resBody = res.body as Map<String, dynamic>?;
+        final groupData = resBody?['data'] as Map<String, dynamic>?;
+        final groupId = groupData?['id'];
+
+        if (groupId != null && memberUsernames.isNotEmpty) {
+          final id = groupId is int
+              ? groupId
+              : int.tryParse(groupId.toString());
+          if (id != null) {
+            for (final uname in memberUsernames) {
+              try {
+                await _api.addGroupMember(id, uname, token);
+              } catch (_) {}
+            }
+          }
+        }
+
         await fetchGroups();
         Get.snackbar('Berhasil', 'Grup berhasil dibuat',
             snackPosition: SnackPosition.BOTTOM,

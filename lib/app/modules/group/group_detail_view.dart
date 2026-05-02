@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/group_model.dart';
+import '../../routes/app_routes.dart';
 import 'group_detail_controller.dart';
 
 class GroupDetailView extends GetView<GroupDetailController> {
@@ -131,6 +132,26 @@ class GroupDetailView extends GetView<GroupDetailController> {
                           ],
                         ),
                       ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // ── TOMBOL LIHAT TRANSAKSI ──
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => Get.toNamed(
+                      AppRoutes.groupTransaction,
+                      arguments: group,
+                    ),
+                    icon: const Icon(Icons.receipt_long_outlined),
+                    label: const Text('Lihat Transaksi & Hutang Grup'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
                 ),

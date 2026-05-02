@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 
 class ApiService extends GetConnect {
   static const String _baseUrl =
-      'https://fluted-typologic-mercy.ngrok-free.dev/api/v1';
+      'https://crumpled-judge-acetone.ngrok-free.dev/api/v1';
 
   @override
   void onInit() {
@@ -211,6 +211,16 @@ class ApiService extends GetConnect {
   Future<Response<dynamic>> deleteGroupTransaction(
       int id, String token) {
     return delete('/group-transactions/$id', headers: _auth(token));
+  }
+
+  /// Buat settlement request untuk group transaction
+  Future<Response<dynamic>> createGroupSettlement(
+      int groupTransactionId, String token) {
+    return post(
+      '/settlement-requests',
+      {'groupTransactionId': groupTransactionId},
+      headers: _auth(token),
+    );
   }
 
   /// Konfirmasi group transaction — dilakukan oleh anggota lain (bukan creator)
