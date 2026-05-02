@@ -18,8 +18,21 @@ class DebtDetailView extends GetView<DebtDetailController> {
             style: TextStyle(fontWeight: FontWeight.bold)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Get.back(),
+          onPressed: () => Get.back(result: true),
         ),
+        actions: [
+          Obx(() {
+            final debtData = controller.debt.value;
+            // Only owner can delete the debt, assuming status is pending
+            if (debtData != null && controller.isOwner && debtData.status == 'PENDING') {
+              return IconButton(
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () => _confirmDeleteDebt(context, debtData.id),
+              );
+            }
+            return const SizedBox();
+          }),
+        ],
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -147,107 +160,141 @@ class DebtDetailView extends GetView<DebtDetailController> {
   }
 
   Widget _buildActions(String status) {
-    // otherUser (pihak lawan yang di-konfirmasi) yang bisa confirm
+    // 1. Pihak lawan (B) yang ditagih: Konfirmasi atau Tolak Hutang
     if (controller.isOtherUser && status == 'pending') {
-      return _ActionBtn(
-        label: 'Konfirmasi Hutang',
-        icon: Icons.check_circle_outline_rounded,
-        color: AppColors.primaryBlue,
-        isLoading: controller.isActing.value,
-        onTap: controller.confirmDebt,
+      return Column(
+        children: [
+          _ActionBtn(
+            label: 'Setujui Hutang',
+            icon: Icons.check_circle_outline_rounded,
+            color: AppColors.primaryBlue,
+            isLoading: controller.isActing.value,
+            onTap: controller.confirmDebt, // Panggil endpoint confirmDebt
+          ),
+          const SizedBox(height: 12),
+          _ActionBtn(
+            label: 'Tolak',
+            icon: Icons.cancel_outlined,
+            color: Colors.red.shade400,
+            isLoading: controller.isActing.value,
+            onTap: controller.rejectDebt, // Panggil endpoint rejectDebt
+          ),
+        ],
       );
     }
 
-    // Owner (pembuat debt) yang bisa ajukan pelunasan
-    if (controller.isOwner && status == 'confirmed') {
+    // 2. Pemilik (A) nunggu konfirmasi hutang
+    if (controller.isOwner && status == 'pending') {
+      return _buildWaitingBox('Menunggu konfirmasi dari peminjam', Colors.orange);
+    }
+
+    // 3. Pihak lawan (B) ajukan pelunasan karena merasa sudah bayar
+    if (controller.isOtherUser && status == 'confirmed') {
       return _ActionBtn(
         label: 'Ajukan Pelunasan',
         icon: Icons.payment_rounded,
         color: Colors.green.shade600,
         isLoading: controller.isActing.value,
-        onTap: controller.requestSettlement,
+        onTap: controller.requestSettlement, // Panggil endpoint requestSettlement
       );
     }
 
-    // otherUser (pihak lawan) sedang pending → tampilkan info menunggu
-    if (controller.isOtherUser && status == 'pending') {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.orange.shade50,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.orange.shade200),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.hourglass_empty_rounded,
-                color: Colors.orange.shade700, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              'Menunggu konfirmasi dari peminjam',
-              style: TextStyle(
-                  color: Colors.orange.shade700,
-                  fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
+    // 4. Pemilik (A) nunggu uang dilunasin
+    if (controller.isOwner && status == 'confirmed') {
+      return _buildWaitingBox('Menunggu pembayaran dari peminjam', Colors.blue);
+    }
+
+    // 5. Pemilik (A) konfirmasi/tolak pelunasan dari B
+    if (controller.isOwner && status == 'settlement_requested') {
+      return Column(
+        children: [
+          _ActionBtn(
+            label: 'Konfirmasi Uang Masuk',
+            icon: Icons.domain_verification_rounded,
+            color: Colors.green.shade600,
+            isLoading: controller.isActing.value,
+            onTap: controller.confirmSettlement, // Panggil endpoint confirmSettlement
+          ),
+          const SizedBox(height: 12),
+          _ActionBtn(
+            label: 'Tolak (Uang belum masuk)',
+            icon: Icons.warning_amber_rounded,
+            color: Colors.red.shade400,
+            isLoading: controller.isActing.value,
+            onTap: controller.rejectSettlement, // Panggil endpoint rejectSettlement
+          ),
+        ],
       );
     }
 
-    // Status sudah settlement_requested atau isPaid
-    if (status == 'settlement_requested') {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.blue.shade50,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.blue.shade200),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.pending_actions_rounded,
-                color: Colors.blue.shade700, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              'Permintaan pelunasan sedang diproses',
-              style: TextStyle(
-                  color: Colors.blue.shade700,
-                  fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-      );
+    // 6. Pihak lawan (B) nunggu pelunasannya di-ACC A
+    if (controller.isOtherUser && status == 'settlement_requested') {
+      return _buildWaitingBox('Menunggu pemilik mengecek pembayaran', Colors.purple);
     }
 
+    // 7. Status Lunas
     if (status == 'settled') {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.green.shade50,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.green.shade200),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.check_circle_rounded,
-                color: Colors.green.shade700, size: 20),
-            const SizedBox(width: 8),
-            Text('Hutang sudah lunas',
-                style: TextStyle(
-                    color: Colors.green.shade700,
-                    fontWeight: FontWeight.w600)),
-          ],
-        ),
-      );
+      return _buildWaitingBox('Hutang sudah lunas', Colors.green, icon: Icons.check_circle_rounded);
+    }
+    
+    // 8. Status Ditolak
+    if (status == 'rejected') {
+      return _buildWaitingBox('Hutang ini ditolak', Colors.red, icon: Icons.cancel);
     }
 
     return const SizedBox.shrink();
+  }
+
+  // Helper untuk kotak teks status
+  Widget _buildWaitingBox(String text, MaterialColor color, {IconData icon = Icons.hourglass_empty_rounded}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: color.shade50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.shade200),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color.shade700, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: TextStyle(color: color.shade700, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteDebt(BuildContext context, int debtId) {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Hapus Catatan',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('Yakin ingin menghapus catatan hutang ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Batal', style: TextStyle(color: AppColors.textGrey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              controller.deleteDebt(debtId);
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

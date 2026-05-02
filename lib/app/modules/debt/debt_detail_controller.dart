@@ -5,6 +5,9 @@ import '../../data/models/debt_model.dart';
 import '../../data/services/api_service.dart';
 import '../../data/services/auth_storage.dart';
 
+import '../home/home_controller.dart'; // Sesuaikan path-nya jika beda folder
+import 'debt_controller.dart';
+
 class DebtDetailController extends GetxController {
   late final ApiService _api;
 
@@ -81,10 +84,46 @@ class DebtDetailController extends GetxController {
             colorText: Colors.white,
             margin: const EdgeInsets.all(12));
         await _fetchDetail(debt.value!.id);
+        _refreshBackgroundControllers(); // Refresh layar lain yang mungkin terpengaruh
       } else {
         final body = res.body as Map<String, dynamic>?;
         Get.snackbar(
             'Gagal', body?['message'] as String? ?? 'Gagal konfirmasi',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.shade400,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(12));
+      }
+    } catch (_) {
+      Get.snackbar('Error', 'Tidak dapat terhubung ke server',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade400,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(12));
+    } finally {
+      isActing.value = false;
+    }
+  }
+
+  Future<void> deleteDebt(int id) async {
+    if (isActing.value) return;
+    final token = AuthStorage.getToken();
+    if (token == null) return;
+
+    isActing.value = true;
+    try {
+      final res = await _api.deleteDebt(id, token);
+      if (res.statusCode == 200 || res.statusCode == 204) {
+        Get.snackbar('Berhasil', 'Catatan hutang berhasil dihapus',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green.shade400,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(12));
+            _refreshBackgroundControllers();
+        Get.back(result: true); // Kembali ke list & beri tau untuk refresh
+      } else {
+        final body = res.body as Map<String, dynamic>?;
+        Get.snackbar('Gagal', body?['message'] ?? 'Gagal menghapus hutang',
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.red.shade400,
             colorText: Colors.white,
@@ -117,6 +156,7 @@ class DebtDetailController extends GetxController {
             colorText: Colors.white,
             margin: const EdgeInsets.all(12));
         await _fetchDetail(debt.value!.id);
+        _refreshBackgroundControllers();
       } else {
         final body = res.body as Map<String, dynamic>?;
         Get.snackbar(
@@ -134,6 +174,123 @@ class DebtDetailController extends GetxController {
           margin: const EdgeInsets.all(12));
     } finally {
       isActing.value = false;
+    }
+  }
+  Future<void> rejectDebt() async {
+    if (isActing.value || debt.value == null) return;
+    final token = AuthStorage.getToken();
+    if (token == null) return;
+
+    isActing.value = true;
+    try {
+      final res = await _api.rejectDebt(debt.value!.id, token);
+      if (res.statusCode == 200) {
+        Get.snackbar('Berhasil', 'Kamu telah menolak tagihan hutang ini',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green.shade400,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(12));
+        await _fetchDetail(debt.value!.id); // Refresh detail
+
+        _refreshBackgroundControllers();
+      } else {
+        final body = res.body as Map<String, dynamic>?;
+        Get.snackbar('Gagal', body?['message'] as String? ?? 'Gagal menolak hutang',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.shade400,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(12));
+      }
+    } catch (_) {
+      Get.snackbar('Error', 'Tidak dapat terhubung ke server',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade400,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(12));
+    } finally {
+      isActing.value = false;
+    }
+  }
+
+  Future<void> confirmSettlement() async {
+    if (isActing.value || debt.value == null) return;
+    final token = AuthStorage.getToken();
+    if (token == null) return;
+
+    isActing.value = true;
+    try {
+      final res = await _api.confirmSettlement(debt.value!.id, token);
+      if (res.statusCode == 200) {
+        Get.snackbar('Berhasil', 'Hutang telah dinyatakan lunas!',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green.shade400,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(12));
+        await _fetchDetail(debt.value!.id);
+        _refreshBackgroundControllers();
+      } else {
+        final body = res.body as Map<String, dynamic>?;
+        Get.snackbar('Gagal', body?['message'] as String? ?? 'Gagal konfirmasi pelunasan',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.shade400,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(12));
+      }
+    } catch (_) {
+      Get.snackbar('Error', 'Tidak dapat terhubung ke server',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade400,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(12));
+    } finally {
+      isActing.value = false;
+    }
+  }
+
+  Future<void> rejectSettlement() async {
+    if (isActing.value || debt.value == null) return;
+    final token = AuthStorage.getToken();
+    if (token == null) return;
+
+    isActing.value = true;
+    try {
+      final res = await _api.rejectSettlement(debt.value!.id, token);
+      if (res.statusCode == 200) {
+        Get.snackbar('Berhasil', 'Pelunasan ditolak',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green.shade400,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(12));
+        await _fetchDetail(debt.value!.id);
+        _refreshBackgroundControllers();
+      } else {
+        final body = res.body as Map<String, dynamic>?;
+        Get.snackbar('Gagal', body?['message'] as String? ?? 'Gagal menolak pelunasan',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.shade400,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(12));
+      }
+    } catch (_) {
+      Get.snackbar('Error', 'Tidak dapat terhubung ke server',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade400,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(12));
+    } finally {
+      isActing.value = false;
+    }
+  }
+
+  // --- Fungsi untuk me-refresh layar di background ---
+  void _refreshBackgroundControllers() {
+    // Refresh Home (Dashboard) kalau controller-nya sedang aktif
+    if (Get.isRegistered<HomeController>()) {
+      Get.find<HomeController>().fetchDashboard();
+    }
+    // Refresh List Hutang kalau controller-nya sedang aktif
+    if (Get.isRegistered<DebtController>()) {
+      Get.find<DebtController>().fetchDebts();
     }
   }
 }

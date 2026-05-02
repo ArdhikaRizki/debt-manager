@@ -27,22 +27,18 @@ Map<String, dynamic> _$GroupMemberModelToJson(GroupMemberModel instance) =>
     };
 
 GroupModel _$GroupModelFromJson(Map<String, dynamic> json) => GroupModel(
-      id: const SafeIntConverter().fromJson(json['id']),
-      name: const SafeGroupNameConverter().fromJson(json['name']),
-      description: json['description'] as String?,
-      creatorId: const SafeIntConverter().fromJson(
-        json['creatorId'] ?? json['creator_id'] ?? 0,
-      ),
-      creator: json['creator'] == null
-          ? null
-          : UserModel.fromJson(json['creator'] as Map<String, dynamic>),
-      members: (json['members'] as List<dynamic>?)
-          ?.map((e) => GroupMemberModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      createdAt: const SafeDateTimeConverter().fromJson(
-        json['createdAt'] ?? json['created_at'],
-      ),
-    );
+  id: const SafeIntConverter().fromJson(json['id']),
+  name: const SafeGroupNameConverter().fromJson(json['name']),
+  description: json['description'] as String?,
+  creatorId: const SafeIntConverter().fromJson(json['creatorId']),
+  creator: json['creator'] == null
+      ? null
+      : UserModel.fromJson(json['creator'] as Map<String, dynamic>),
+  members: (json['members'] as List<dynamic>?)
+      ?.map((e) => GroupMemberModel.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  createdAt: const SafeDateTimeConverter().fromJson(json['createdAt']),
+);
 
 Map<String, dynamic> _$GroupModelToJson(GroupModel instance) =>
     <String, dynamic>{

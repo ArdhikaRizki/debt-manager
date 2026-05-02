@@ -205,7 +205,12 @@ class HomeView extends GetView<HomeController> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       child: GestureDetector(
-        onTap: () => Get.toNamed(AppRoutes.debtDetail, arguments: debt),
+        onTap: () async {
+          final result = await Get.toNamed(AppRoutes.debtDetail, arguments: debt);
+          if (result == true) {
+            Get.find<HomeController>().fetchDashboard();
+          }
+        },
         child: Card(
           elevation: 2,
           shadowColor: Colors.black12,

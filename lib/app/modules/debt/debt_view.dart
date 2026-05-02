@@ -177,9 +177,9 @@ class DebtView extends GetView<DebtController> {
                 const SizedBox(height: 20),
                 _SheetField(
                   controller: debtorIdCtrl,
-                  label: 'ID Peminjam',
-                  hint: 'Masukkan user ID peminjam',
-                  keyboardType: TextInputType.number,
+                  label: 'Username Peminjam',
+                  hint: 'Masukkan username peminjam',
+                  keyboardType: TextInputType.text,
                   validator: (v) =>
                       (v == null || v.isEmpty) ? 'Wajib diisi' : null,
                 ),
@@ -208,10 +208,15 @@ class DebtView extends GetView<DebtController> {
                   child: ElevatedButton(
                     onPressed: () async {
                       if (!formKey.currentState!.validate()) return;
-                      Get.back();
-                      // TODO: call createDebt from a dedicated create controller
-                      Get.snackbar('Info', 'Fitur dalam pengembangan',
-                          snackPosition: SnackPosition.BOTTOM);
+                      
+                      final otherUsername = debtorIdCtrl.text.trim();
+                      final amount = double.tryParse(amountCtrl.text.trim()) ?? 0.0;
+                      final desc = descCtrl.text.trim();
+                      final dueDate = DateTime.now().add(Duration(days: 30)); // Contoh due date, bisa diubah sesuai kebutuhan
+
+                      Get.back(); // tutup bottom sheet
+                      
+                      await controller.createDebt(otherUsername, amount, desc, dueDate);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryTeal,
@@ -251,7 +256,12 @@ class _DebtCard extends StatelessWidget {
         : (debt.owner?.username ?? 'User #${debt.userId}');
 
     return GestureDetector(
-      onTap: () => Get.toNamed(AppRoutes.debtDetail, arguments: debt),
+      onTap: () async {
+        final result = await Get.toNamed(AppRoutes.debtDetail, arguments: debt);
+        if (result == true) {
+          Get.find<DebtController>().fetchDebts();
+        }
+      },
       child: Card(
         margin: const EdgeInsets.only(bottom: 10),
         elevation: 2,

@@ -127,10 +127,10 @@ class ApiService extends GetConnect {
 
   /// Ajukan pelunasan — membuat settlement request baru
   /// Backend: POST /settlement-requests dengan body { "debtId": id }
-  Future<Response<dynamic>> requestSettlement(int debtId, String token) {
+ Future<Response<dynamic>> requestSettlement(int id, String token) {
     return post(
-      '/settlement-requests',
-      {'debtId': debtId},
+      '/debts/$id/settlement-request', 
+      {}, // Body dikosongkan karena backend hanya membaca ID dari URL params
       headers: _auth(token),
     );
   }
@@ -148,10 +148,10 @@ class ApiService extends GetConnect {
   }
 
   /// Tolak settlement — dilakukan oleh toUser
-  Future<Response<dynamic>> rejectSettlement(int id, String token) {
-    return patch('/settlement-requests/$id/reject', {},
-        headers: _auth(token));
-  }
+  // Future<Response<dynamic>> rejectSettlement(int id, String token) {
+  //   return patch('/settlement-requests/$id/reject', {},
+  //       headers: _auth(token));
+  // }
 
   // ─── GROUPS ────────────────────────────────────────────
 
@@ -211,6 +211,22 @@ class ApiService extends GetConnect {
   Future<Response<dynamic>> deleteGroupTransaction(
       int id, String token) {
     return delete('/group-transactions/$id', headers: _auth(token));
+  }
+
+  /// Konfirmasi group transaction — dilakukan oleh anggota lain (bukan creator)
+  Future<Response> rejectDebt(int id, String token) {
+    return patch('/debts/$id/reject', {},
+        headers: {'Authorization': 'Bearer $token'});
+  }
+
+  Future<Response> confirmSettlement(int id, String token) {
+    return patch('/debts/$id/settlement-confirm', {},
+        headers: {'Authorization': 'Bearer $token'});
+  }
+
+  Future<Response> rejectSettlement(int id, String token) {
+    return patch('/debts/$id/settlement-reject', {},
+        headers: {'Authorization': 'Bearer $token'});
   }
   // ─── HELPER ────────────────────────────────────────────
   Map<String, String> _auth(String token) =>

@@ -36,6 +36,38 @@ class DebtController extends GetxController {
     super.onClose();
   }
 
+  Future<void> createDebt(String otherUsername, double amount, String description, DateTime dueDate) async {
+    final token = AuthStorage.getToken();
+    if (token == null) {
+      Get.snackbar('Error', 'Sesi telah habis, silakan login kembali');
+      return;
+    }
+
+    try {
+      // Format due_date sebagai YYYY-MM-DD
+      final dueDateStr = '${dueDate.year}-${dueDate.month.toString().padLeft(2, '0')}-${dueDate.day.toString().padLeft(2, '0')}';
+      
+      final body = {
+        'amount': amount,
+        'description': description,
+        'due_date': dueDateStr,
+        'otherUsername': otherUsername,
+      };
+
+      final response = await _api.createDebt(body, token);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        Get.snackbar('Sukses', 'Berhasil mencatat utang baru');
+        fetchDebts(); // Refresh data
+      } else {
+        final resBody = response.body as Map<String, dynamic>?;
+        Get.snackbar('Gagal', resBody?['message'] ?? 'Terjadi kesalahan saat menyimpan data');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Kesalahan jaringan: $e');
+    }
+  }
+
   Future<void> fetchDebts() async {
     final token = AuthStorage.getToken();
     if (token == null) return;
@@ -56,8 +88,11 @@ class DebtController extends GetxController {
                 .map((e) => DebtModel.fromJson(e as Map<String, dynamic>))
                 .toList();
 
+            // myDebts (Hutangku): posisiku sebagai otherUserId (peminjam)
             myDebts.value =
                 all.where((d) => d.otherUserId == currentUserId).toList();
+
+            // owedToMe (Piutangku): posisiku sebagai userId (yang menagih/owner)
             owedToMe.value =
                 all.where((d) => d.userId == currentUserId).toList();
           } catch (e) {
