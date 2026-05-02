@@ -26,40 +26,41 @@ class DebtView extends GetView<DebtController> {
             onPressed: () => Get.back(),
           ),
           bottom: const TabBar(
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white60,
-            indicatorColor: Colors.white,
-            indicatorWeight: 3,
-            tabs: [
-              Tab(text: 'Hutang Saya'),
-              Tab(text: 'Piutang Saya'),
-            ],
-          ),
-        ),
-        body: Obx(() {
-          if (controller.isLoading.value) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primaryTeal),
-            );
-          }
-          if (controller.errorMsg.value.isNotEmpty) {
-            return _buildErrorState(controller.errorMsg.value);
-          }
-          return TabBarView(
-            children: [
-              _buildDebtList(controller.myDebts, isMyDebt: true),
-              _buildDebtList(controller.owedToMe, isMyDebt: false),
-            ],
-          );
-        }),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => _showCreateDebtSheet(context),
-          backgroundColor: AppColors.primaryTeal,
-          icon: const Icon(Icons.add, color: Colors.white),
-          label: const Text('Tambah Hutang',
-              style: TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold)),
-        ),
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.white60,
+                  indicatorColor: Colors.white,
+                  indicatorWeight: 3,
+                  tabs: [
+                    Tab(text: 'Hutang Saya'),
+                    Tab(text: 'Piutang Saya'),
+                  ],
+                ),
+              ),
+              body: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                        color: AppColors.primaryTeal),
+                  );
+                }
+                if (controller.errorMsg.value.isNotEmpty) {
+                  return _buildErrorState(controller.errorMsg.value);
+                }
+                return TabBarView(
+                  children: [
+                    _buildDebtList(controller.myDebts, isMyDebt: true),
+                    _buildDebtList(controller.owedToMe, isMyDebt: false),
+                  ],
+                );
+              }),
+              floatingActionButton: FloatingActionButton.extended(
+                onPressed: () => _showCreateDebtSheet(context),
+                backgroundColor: AppColors.primaryTeal,
+                icon: const Icon(Icons.add, color: Colors.white),
+                label: const Text('Tambah Hutang',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
       ),
     );
   }

@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 
 class ApiService extends GetConnect {
   static const String _baseUrl =
-      'https://crumpled-judge-acetone.ngrok-free.dev/api/v1';
+      'https://fluted-typologic-mercy.ngrok-free.dev/api/v1';
 
   @override
   void onInit() {

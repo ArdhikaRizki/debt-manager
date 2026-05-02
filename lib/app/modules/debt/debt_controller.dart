@@ -31,6 +31,11 @@ class DebtController extends GetxController {
     fetchDebts();
   }
 
+  @override
+  void onClose() {
+    super.onClose();
+  }
+
   Future<void> fetchDebts() async {
     final token = AuthStorage.getToken();
     if (token == null) return;

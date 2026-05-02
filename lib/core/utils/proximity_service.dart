@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:proximity_sensor/proximity_sensor.dart';
 
 /// Service global yang mendeteksi proximity sensor.
 /// Saat HP dimasukkan kantong (sensor dekat > 1.5 detik),
 /// layar akan mati dan app keluar (minimize).
-class ProximityService extends GetxService {
+class ProximityService extends GetxService with WidgetsBindingObserver {
   StreamSubscription<dynamic>? _subscription;
   Timer? _pocketTimer;
 
@@ -17,6 +18,24 @@ class ProximityService extends GetxService {
 
   final isNear = false.obs;
   final isActive = false.obs;
+
+   @override
+  void onInit() {
+    super.onInit();
+    // Mendaftarkan deteksi background/foreground
+    WidgetsBinding.instance.addObserver(this); 
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Aplikasi dibuka kembali -> Nyalakan sensor
+      if (!isActive.value) startListening();
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      // Aplikasi di-minimize/background -> Matikan sensor sementara
+      stopListening();
+    }
+  }
 
   /// Mulai mendengarkan proximity sensor.
   void startListening() {
@@ -69,6 +88,7 @@ class ProximityService extends GetxService {
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     stopListening();
     super.onClose();
   }
