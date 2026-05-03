@@ -5,6 +5,7 @@ import '../modules/debt/debt_detail_view.dart';
 import '../modules/debt/debt_view.dart';
 import '../modules/group/group_binding.dart';
 import '../modules/group/group_detail_view.dart';
+import '../modules/group/group_transaction_view.dart';
 import '../modules/group/group_view.dart';
 import '../modules/home/home_binding.dart';
 import '../modules/home/home_view.dart';
@@ -56,6 +57,11 @@ class AppPages {
       name: AppRoutes.groupDetail,
       page: () => const GroupDetailView(),
       binding: GroupDetailBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.groupTransaction,
+      page: () => const GroupTransactionView(),
+      binding: GroupTransactionBinding(),
     ),
     GetPage(
       name: AppRoutes.profile,
