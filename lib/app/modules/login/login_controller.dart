@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../data/services/api_service.dart';
 import '../../data/services/auth_storage.dart';
 import '../../routes/app_routes.dart';
@@ -24,14 +24,42 @@ class LoginController extends GetxController {
     _checkBiometric();
   }
 
+  Future<void> _saveDeviceTokenToBackend(String authToken) async {
+    try {
+      // 1. Ambil FCM Token dari Firebase
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
+      
+      if (fcmToken != null) {
+        debugPrint("FCM Token: $fcmToken");
+        // 2. Kirim ke backend (pastikan method updateFcmToken sudah ada di ApiService)
+        await _apiService.updateFcmToken(fcmToken, authToken);
+      }
+    } catch (e) {
+      debugPrint("Gagal update FCM Token: $e");
+    }
+  }
+
   /// Cek apakah ada biometrik yang sudah diaktifkan
   Future<void> _checkBiometric() async {
     isBiometricAvailable.value = await _biometricC.hasBiometricEnabled();
   }
 
   /// Login menggunakan sidik jari
+/// Login menggunakan sidik jari
   Future<void> loginWithBiometric() async {
+    // 1. Jalankan verifikasi biometrik
     await _biometricC.loginWithBiometric();
+
+    // 2. Cek apakah setelah login biometric, kita punya token di storage
+    final savedToken = AuthStorage.getToken();
+    if (savedToken != null) {
+      // Update FCM Token ke backend secara asynchronous (tidak perlu ditunggu/await)
+      // agar tidak menghambat navigasi ke Home
+      _saveDeviceTokenToBackend(savedToken);
+      
+      // Biasanya navigasi sudah ditangani di dalam BiometricController, 
+      // tapi pastikan token FCM terkirim.
+    }
   }
 
   Future<void> login() async {
@@ -92,7 +120,11 @@ class LoginController extends GetxController {
         final token = body['token'] as String?;
         if (token != null) {
           await AuthStorage.saveToken(token);
+
+        await _saveDeviceTokenToBackend(token);
+
         }
+
 
         // Simpan user data — backend kirim response['data'], bukan response['user']
         final rawUser = body['data'] as Map<String, dynamic>?;
@@ -104,6 +136,7 @@ class LoginController extends GetxController {
           }
           await AuthStorage.saveUser(normalized);
         }
+
 
         Get.snackbar(
           'Berhasil',

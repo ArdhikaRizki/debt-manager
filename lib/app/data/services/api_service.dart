@@ -228,6 +228,14 @@ class ApiService extends GetConnect {
     return patch('/debts/$id/settlement-reject', {},
         headers: {'Authorization': 'Bearer $token'});
   }
+
+  Future<Response<dynamic>> updateFcmToken(String fcmToken, String token) {
+    return patch(
+      '/users/me/fcm-token', 
+      {'fcm_token': fcmToken},
+      headers: _auth(token),
+    );
+  }
   // ─── HELPER ────────────────────────────────────────────
   Map<String, String> _auth(String token) =>
       {'Authorization': 'Bearer $token'};
