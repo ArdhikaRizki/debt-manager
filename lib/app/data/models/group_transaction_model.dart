@@ -5,6 +5,25 @@ import 'user_model.dart';
 part 'group_transaction_model.g.dart';
 
 @JsonSerializable(explicitToJson: true)
+class GroupSettlementRequestModel {
+  @SafeIntConverter()
+  final int id;
+  
+  @SafeStatusConverter()
+  final String status;
+
+  const GroupSettlementRequestModel({
+    required this.id,
+    required this.status,
+  });
+
+  factory GroupSettlementRequestModel.fromJson(Map<String, dynamic> json) =>
+      _$GroupSettlementRequestModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$GroupSettlementRequestModelToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true)
 class GroupTransactionModel {
   @SafeIntConverter()
   final int id;
@@ -31,6 +50,8 @@ class GroupTransactionModel {
   final UserModel? fromUser;
   final UserModel? toUser;
 
+  final List<GroupSettlementRequestModel>? settlementRequests;
+
   @JsonKey(name: 'createdAt')
   @SafeDateTimeConverter()
   final DateTime createdAt;
@@ -44,6 +65,7 @@ class GroupTransactionModel {
     required this.description,
     this.fromUser,
     this.toUser,
+    this.settlementRequests,
     required this.createdAt,
   });
 

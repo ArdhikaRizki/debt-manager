@@ -6,6 +6,20 @@ part of 'group_transaction_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+GroupSettlementRequestModel _$GroupSettlementRequestModelFromJson(
+  Map<String, dynamic> json,
+) => GroupSettlementRequestModel(
+  id: const SafeIntConverter().fromJson(json['id']),
+  status: const SafeStatusConverter().fromJson(json['status']),
+);
+
+Map<String, dynamic> _$GroupSettlementRequestModelToJson(
+  GroupSettlementRequestModel instance,
+) => <String, dynamic>{
+  'id': const SafeIntConverter().toJson(instance.id),
+  'status': const SafeStatusConverter().toJson(instance.status),
+};
+
 GroupTransactionModel _$GroupTransactionModelFromJson(
   Map<String, dynamic> json,
 ) => GroupTransactionModel(
@@ -21,6 +35,9 @@ GroupTransactionModel _$GroupTransactionModelFromJson(
   toUser: json['toUser'] == null
       ? null
       : UserModel.fromJson(json['toUser'] as Map<String, dynamic>),
+  settlementRequests: (json['settlementRequests'] as List<dynamic>?)
+      ?.map((e) => GroupSettlementRequestModel.fromJson(e as Map<String, dynamic>))
+      .toList(),
   createdAt: const SafeDateTimeConverter().fromJson(json['createdAt']),
 );
 
@@ -35,5 +52,6 @@ Map<String, dynamic> _$GroupTransactionModelToJson(
   'description': const SafeStringConverter().toJson(instance.description),
   'fromUser': instance.fromUser?.toJson(),
   'toUser': instance.toUser?.toJson(),
+  'settlementRequests': instance.settlementRequests?.map((e) => e.toJson()).toList(),
   'createdAt': const SafeDateTimeConverter().toJson(instance.createdAt),
 };

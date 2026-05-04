@@ -205,11 +205,79 @@ class GroupTransactionController extends GetxController {
     }
   }
 
+  // ─── Approve Settlement ─────────────────────────────────
+  Future<void> approveSettlement(int settlementId) async {
+    final token = AuthStorage.getToken();
+    if (token == null) return;
+    try {
+      final res = await _api.approveSettlementReq(settlementId, token);
+      if (res.statusCode == 200) {
+        Get.snackbar(
+          'Berhasil',
+          'Pelunasan berhasil disetujui',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF4CAF50),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(12),
+        );
+        await fetchTransactions();
+      } else {
+        final body = res.body as Map<String, dynamic>?;
+        Get.snackbar(
+          'Gagal',
+          body?['message'] as String? ?? 'Gagal menyetujui pelunasan',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFFF44336),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(12),
+        );
+      }
+    } catch (_) {
+      Get.snackbar('Error', 'Tidak dapat terhubung ke server');
+    }
+  }
+
+  // ─── Reject Settlement ─────────────────────────────────
+  Future<void> rejectSettlement(int settlementId) async {
+    final token = AuthStorage.getToken();
+    if (token == null) return;
+    try {
+      final res = await _api.rejectSettlementReq(settlementId, token);
+      if (res.statusCode == 200) {
+        Get.snackbar(
+          'Berhasil',
+          'Pelunasan ditolak',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF4CAF50),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(12),
+        );
+        await fetchTransactions();
+      } else {
+        final body = res.body as Map<String, dynamic>?;
+        Get.snackbar(
+          'Gagal',
+          body?['message'] as String? ?? 'Gagal menolak pelunasan',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFFF44336),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(12),
+        );
+      }
+    } catch (_) {
+      Get.snackbar('Error', 'Tidak dapat terhubung ke server');
+    }
+  }
+
   // ─── DEBT CHAIN LOGIC ────────────────────────────────────
   // Menghitung net balance: positif = dihutangi orang ini, negatif = berhutang
   void _computeNetBalances() {
     final balances = <int, double>{};
     for (final tx in transactions) {
+      // Skip transaksi yang sudah lunas (approved)
+      final isApproved = (tx.settlementRequests ?? []).any((r) => r.status == 'approved');
+      if (isApproved) continue;
+
       // fromUser berhutang kepada toUser → fromUser - amount, toUser + amount
       balances[tx.fromUserId] = (balances[tx.fromUserId] ?? 0) - tx.amount;
       balances[tx.toUserId] = (balances[tx.toUserId] ?? 0) + tx.amount;
@@ -227,6 +295,10 @@ class GroupTransactionController extends GetxController {
     final debts = <int, Map<int, double>>{};
 
     for (final tx in transactions) {
+      // Skip transaksi yang sudah lunas (approved)
+      final isApproved = (tx.settlementRequests ?? []).any((r) => r.status == 'approved');
+      if (isApproved) continue;
+
       debts[tx.fromUserId] ??= {};
       debts[tx.fromUserId]![tx.toUserId] =
           (debts[tx.fromUserId]![tx.toUserId] ?? 0) + tx.amount;

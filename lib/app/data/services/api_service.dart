@@ -142,16 +142,16 @@ class ApiService extends GetConnect {
   }
 
   /// Setujui settlement — dilakukan oleh toUser (penerima klaim)
-  Future<Response<dynamic>> approveSettlement(int id, String token) {
+  Future<Response<dynamic>> approveSettlementReq(int id, String token) {
     return patch('/settlement-requests/$id/approve', {},
         headers: _auth(token));
   }
 
   /// Tolak settlement — dilakukan oleh toUser
-  // Future<Response<dynamic>> rejectSettlement(int id, String token) {
-  //   return patch('/settlement-requests/$id/reject', {},
-  //       headers: _auth(token));
-  // }
+  Future<Response<dynamic>> rejectSettlementReq(int id, String token) {
+    return patch('/settlement-requests/$id/reject', {},
+        headers: _auth(token));
+  }
 
   // ─── GROUPS ────────────────────────────────────────────
 

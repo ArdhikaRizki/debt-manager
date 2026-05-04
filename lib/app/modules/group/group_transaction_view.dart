@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/group_transaction_model.dart';
 import 'group_transaction_controller.dart';
+import 'spin_wheel_screen.dart';
 
 class GroupTransactionView extends GetView<GroupTransactionController> {
   const GroupTransactionView({super.key});
@@ -25,6 +26,23 @@ class GroupTransactionView extends GetView<GroupTransactionController> {
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
             onPressed: () => Get.back(),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.casino_outlined),
+              tooltip: 'Roda Pengatur Nasib Hutangmu',
+              onPressed: () {
+                final members = controller.group.value?.members
+                    ?.map((m) => m.user?.username ?? 'User #${m.userId}')
+                    .toList() ?? [];
+                if (members.length >= 2) {
+                  Get.to(() => SpinWheelGameScreen(usernames: members));
+                } else {
+                  Get.snackbar('Info', 'Butuh minimal 2 anggota grup',
+                      snackPosition: SnackPosition.BOTTOM);
+                }
+              },
+            ),
+          ],
           bottom: const TabBar(
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white60,
@@ -314,6 +332,7 @@ class _TxCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isIAm = tx.fromUserId == controller.currentUserId;
+    final isToMe = tx.toUserId == controller.currentUserId;
     final fromName = tx.fromUser?.username ?? controller.usernameOf(tx.fromUserId);
     final toName = tx.toUser?.username ?? controller.usernameOf(tx.toUserId);
 
@@ -375,38 +394,164 @@ class _TxCard extends StatelessWidget {
                     fontSize: 14,
                     color: isIAm ? Colors.red.shade600 : Colors.green.shade700)),
             const SizedBox(height: 6),
-            // Tombol lunasi — hanya muncul jika saya yang berhutang
-            if (isIAm)
-              GestureDetector(
-                onTap: () => _confirmSettle(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primaryTeal, AppColors.primaryBlue],
+            
+            // Logika Status Settlement
+            Builder(builder: (context) {
+              final requests = tx.settlementRequests ?? [];
+              final pendingReq = requests.where((r) => r.status == 'pending').lastOrNull;
+              final isApproved = requests.any((r) => r.status == 'approved');
+
+              if (isApproved) {
+                return _buildBadge('Lunas', Colors.green);
+              }
+
+              if (pendingReq != null) {
+                if (isIAm) {
+                  // Saya yang hutang, dan saya sudah ajukan pelunasan
+                  return _buildBadge('Menunggu Konfirmasi', Colors.orange);
+                } else if (isToMe) {
+                  // Saya yang menghutangi, ada orang ajukan pelunasan ke saya
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _confirmApprove(context, pendingReq.id),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          margin: const EdgeInsets.only(right: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade500,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(Icons.check, size: 16, color: Colors.white),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => _confirmReject(context, pendingReq.id),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade500,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(Icons.close, size: 16, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  // Pihak ketiga (bukan fromUserId dan bukan toUserId)
+                  return _buildBadge('Menunggu Konfirmasi', Colors.orange);
+                }
+              }
+
+              // Jika belum ada request pending/approved
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (isIAm)
+                    GestureDetector(
+                      onTap: () => _confirmSettle(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppColors.primaryTeal, AppColors.primaryBlue],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text('Lunasi',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold)),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text('Lunasi',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold)),
-                ),
-              ),
-            // Tombol hapus — hanya pembuat transaksi
-            if (isIAm) ...[
-              const SizedBox(height: 4),
-              GestureDetector(
-                onTap: () => _confirmDelete(context),
-                child: const Icon(Icons.delete_outline_rounded,
-                    size: 18, color: Colors.redAccent),
-              ),
-            ],
+                  if (isIAm) ...[
+                    const SizedBox(height: 4),
+                    GestureDetector(
+                      onTap: () => _confirmDelete(context),
+                      child: const Icon(Icons.delete_outline_rounded,
+                          size: 18, color: Colors.redAccent),
+                    ),
+                  ],
+                ],
+              );
+            }),
           ]),
         ]),
       ),
     );
+  }
+
+  Widget _buildBadge(String text, MaterialColor color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.shade50,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.shade200),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: color.shade700),
+      ),
+    );
+  }
+
+  void _confirmApprove(BuildContext context, int settlementId) {
+    Get.dialog(AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text('Terima Pelunasan',
+          style: TextStyle(fontWeight: FontWeight.bold)),
+      content: const Text('Terima pelunasan untuk transaksi ini?'),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(),
+          child: const Text('Batal', style: TextStyle(color: AppColors.textGrey)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Get.back();
+            controller.approveSettlement(settlementId);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Terima'),
+        ),
+      ],
+    ));
+  }
+
+  void _confirmReject(BuildContext context, int settlementId) {
+    Get.dialog(AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text('Tolak Pelunasan',
+          style: TextStyle(fontWeight: FontWeight.bold)),
+      content: const Text('Tolak pelunasan untuk transaksi ini?'),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(),
+          child: const Text('Batal', style: TextStyle(color: AppColors.textGrey)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Get.back();
+            controller.rejectSettlement(settlementId);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Tolak'),
+        ),
+      ],
+    ));
   }
 
   void _confirmSettle(BuildContext context) {
@@ -478,13 +623,15 @@ class _SummaryTab extends StatelessWidget {
     final chains = controller.debtChains;
     final myId = controller.currentUserId;
 
-    if (balances.isEmpty) {
+    final validBalances = balances.entries.where((e) => e.value != 0).toList();
+
+    if (validBalances.isEmpty) {
       return Center(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Icon(Icons.balance_outlined,
               size: 72, color: AppColors.textGrey.withOpacity(0.4)),
           const SizedBox(height: 16),
-          const Text('Belum ada data saldo',
+          const Text('Semua hutang sudah lunas',
               style: TextStyle(fontSize: 15, color: AppColors.textGrey)),
         ]),
       );
@@ -496,10 +643,10 @@ class _SummaryTab extends StatelessWidget {
         // ── Saldo per Anggota ──
         _sectionTitle('Saldo Bersih per Anggota'),
         const SizedBox(height: 8),
-        ...balances.entries.map((e) {
+        ...validBalances.map((e) {
           final name = controller.usernameOf(e.key);
           final net = e.value;
-          final isPositive = net >= 0;
+          final isPositive = net > 0;
           final isMe = e.key == myId;
           return Card(
             margin: const EdgeInsets.only(bottom: 8),

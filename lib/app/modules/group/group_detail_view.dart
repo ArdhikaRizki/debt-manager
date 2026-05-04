@@ -49,6 +49,8 @@ class GroupDetailView extends GetView<GroupDetailController> {
         }
 
         final isCreator = group.creatorId == controller.currentUserId;
+        final isAdminUser = group.members?.any((m) => m.userId == controller.currentUserId && m.role == 'admin') ?? false;
+        final canManage = isCreator || isAdminUser;
 
         return RefreshIndicator(
           color: AppColors.primaryTeal,
@@ -168,7 +170,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
                           fontWeight: FontWeight.bold,
                           color: AppColors.textDark),
                     ),
-                    if (isCreator)
+                    if (canManage)
                       TextButton.icon(
                         onPressed: () => _showAddMemberSheet(context),
                         icon: const Icon(Icons.person_add_alt_1_rounded,
@@ -256,7 +258,7 @@ class GroupDetailView extends GetView<GroupDetailController> {
                               ? Text(memberEmail,
                                   style: const TextStyle(fontSize: 12))
                               : null,
-                          trailing: (isCreator && !isMe)
+                          trailing: (canManage && !isMe)
                               ? IconButton(
                                   icon: const Icon(
                                       Icons.person_remove_rounded,
