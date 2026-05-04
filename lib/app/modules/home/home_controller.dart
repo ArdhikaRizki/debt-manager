@@ -28,17 +28,19 @@ class HomeController extends GetxController {
   String get currentUsername =>
       AuthStorage.getUser()?['username'] as String? ?? 'Pengguna';
 
-  double get totalIOwe {
-    // User adalah pihak yang berhutang = otherUserId (pihak lawan yang dikonfirmasi)
+double get totalIOwe {
+    // Hanya hitung jika status confirmed atau settlement_requested
     return recentDebts
-        .where((d) => d.otherUserId == currentUserId && d.status != 'settlement_requested' && !d.isPaid)
+        .where((d) => d.otherUserId == currentUserId && 
+              (d.status == 'confirmed' || d.status == 'settlement_requested'))
         .fold(0.0, (sum, d) => sum + d.amount);
   }
 
   double get totalOwedToMe {
-    // User adalah pemilik debt = userId (yang membuat debt)
+    // Hanya hitung jika status confirmed atau settlement_requested
     return recentDebts
-        .where((d) => d.userId == currentUserId && d.status != 'settlement_requested' && !d.isPaid)
+        .where((d) => d.userId == currentUserId && 
+              (d.status == 'confirmed' || d.status == 'settlement_requested'))
         .fold(0.0, (sum, d) => sum + d.amount);
   }
 

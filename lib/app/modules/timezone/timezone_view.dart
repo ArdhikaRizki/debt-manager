@@ -31,7 +31,7 @@ class TimezoneView extends GetView<TimezoneController> {
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF6C63FF), Color(0xFF2EC4B6)],
+            colors: [AppColors.primaryBlue, AppColors.primaryTeal],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -43,13 +43,7 @@ class TimezoneView extends GetView<TimezoneController> {
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Tombol back
-            GestureDetector(
-              onTap: () => Get.back(),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-            ),
-            const SizedBox(height: 12),
+         children: [
             const Text(
               '🕐 Konversi Waktu',
               style: TextStyle(
@@ -94,7 +88,7 @@ class TimezoneView extends GetView<TimezoneController> {
                 sublabel: 'UTC+7',
                 time: controller.wibTime.value,
                 emoji: '🏙️',
-                color: const Color(0xFF2EC4B6),
+                color: AppColors.primaryTeal,
               ))),
               const SizedBox(width: 10),
               Expanded(child: Obx(() => _ClockCard(
@@ -102,7 +96,7 @@ class TimezoneView extends GetView<TimezoneController> {
                 sublabel: 'UTC+8',
                 time: controller.witaTime.value,
                 emoji: '🌴',
-                color: const Color(0xFF6C63FF),
+                color: AppColors.primaryBlue,
               ))),
             ],
           ),
@@ -114,7 +108,7 @@ class TimezoneView extends GetView<TimezoneController> {
                 sublabel: 'UTC+9',
                 time: controller.witTime.value,
                 emoji: '🦜',
-                color: const Color(0xFFF7931A),
+                color: Colors.orange.shade400,
               ))),
               const SizedBox(width: 10),
               Expanded(child: Obx(() => _ClockCard(
@@ -122,7 +116,7 @@ class TimezoneView extends GetView<TimezoneController> {
                 sublabel: 'UTC+0/+1',
                 time: controller.londonTime.value,
                 emoji: '🎡',
-                color: const Color(0xFFE53935),
+                color: Colors.red.shade400,
               ))),
             ],
           ),

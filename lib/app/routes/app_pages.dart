@@ -17,6 +17,8 @@ import '../modules/currency/currency_view.dart';
 import '../modules/timezone/timezone_binding.dart';
 import '../modules/timezone/timezone_view.dart';
 import '../modules/welcome/welcome_view.dart';
+import '../modules/main_gate/main_gate_binding.dart';
+import '../modules/main_gate/main_gate_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -76,6 +78,11 @@ class AppPages {
       name: AppRoutes.currency,
       page: () => const CurrencyView(),
       binding: CurrencyBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.mainGate,
+      page: () => const MainGateView(),
+      binding: MainGateBinding(), // Pakai binding gabungan tadi
     ),
   ];
 }

@@ -18,10 +18,10 @@ class GroupView extends GetView<GroupController> {
         title: const Text('Grup Hutang',
             style: TextStyle(fontWeight: FontWeight.bold)),
         automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Get.back(),
-        ),
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios_new_rounded),
+        //   onPressed: () => Get.back(),
+        // ),
       ),
       body: Obx(() {
         if (controller.isLoading.value) {

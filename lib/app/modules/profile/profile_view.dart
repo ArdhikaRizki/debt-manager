@@ -28,14 +28,14 @@ class ProfileView extends StatelessWidget {
                     color: AppColors.primaryTeal,
                   ),
                 ),
-                Positioned(
-                  top: 50,
-                  left: 20,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                    onPressed: () => Get.back(),
-                  ),
-                ),
+                // Positioned(
+                //   top: 50,
+                //   left: 20,
+                //   child: IconButton(
+                //     icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                //     onPressed: () => Get.back(),
+                //   ),
+                // ),
                 const Positioned(
                   top: 55,
                   child: Text("Profile",
