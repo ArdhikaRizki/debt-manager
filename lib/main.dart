@@ -10,6 +10,9 @@ import 'firebase_options.dart';
 import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
 import 'core/theme/app_colors.dart';
+import 'app/data/services/local_db_service.dart';
+import 'app/data/services/ai_receipt_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // Handler untuk background message HARUS berupa top-level function
 @pragma('vm:entry-point')
@@ -22,9 +25,18 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Load environment variables dari file .env
+  await dotenv.load(fileName: ".env");
+  
   // Inisialisasi GetStorage dan DateFormatting dari kodemu
   await GetStorage.init();
   await initializeDateFormatting('id', null);
+
+  // Inisialisasi SQLite Cache DB
+  await Get.putAsync(() => LocalDbService().init());
+  
+  // Inisialisasi AI Service
+  Get.put(AiReceiptService());
 
   // Inisialisasi Firebase
   await Firebase.initializeApp(
