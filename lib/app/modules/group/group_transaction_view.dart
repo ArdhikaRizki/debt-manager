@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/group_transaction_model.dart';
 import 'group_transaction_controller.dart';
 import 'spin_wheel_screen.dart';
+import 'split_bill_ai_view.dart';
 
 class GroupTransactionView extends GetView<GroupTransactionController> {
   const GroupTransactionView({super.key});
@@ -140,7 +142,110 @@ class GroupTransactionView extends GetView<GroupTransactionController> {
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textDark)),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 45,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      // Tutup bottom sheet form manual
+                      Get.back();
+
+                      final members = controller.group.value?.members ?? [];
+                      String selectedPayer = controller.currentUsername; // default ke diri sendiri
+                      if (selectedPayer.isEmpty && members.isNotEmpty) {
+                         selectedPayer = members.first.user?.username ?? '';
+                      }
+
+                      // Tampilkan bottom sheet untuk memilih siapa yang menalangi
+                      Get.bottomSheet(
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text('Siapa yang menalangi/bayar struk ini?',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              const SizedBox(height: 16),
+                              StatefulBuilder(builder: (context, setModalState) {
+                                return Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: members.map((m) {
+                                    final uname = m.user?.username ?? '';
+                                    if (uname.isEmpty) return const SizedBox.shrink();
+                                    final isSelected = selectedPayer == uname;
+                                    return ChoiceChip(
+                                      label: Text(uname == controller.currentUsername ? 'Saya ($uname)' : uname),
+                                      selected: isSelected,
+                                      selectedColor: AppColors.primaryTeal,
+                                      labelStyle: TextStyle(
+                                        color: isSelected ? Colors.white : AppColors.textDark,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      onSelected: (_) {
+                                        setModalState(() {
+                                          selectedPayer = uname;
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                );
+                              }),
+                              const SizedBox(height: 24),
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  Get.back(); // tutup bottom sheet
+                                  // Lanjut buka kamera
+                                  final picker = ImagePicker();
+                                  final image = await picker.pickImage(source: ImageSource.camera);
+                                  if (image != null) {
+                                    Get.to(() => SplitBillAiView(
+                                      imageFile: image,
+                                      txController: controller,
+                                      payerUsername: selectedPayer,
+                                    ));
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryTeal,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                icon: const Icon(Icons.camera_alt, color: Colors.white),
+                                label: const Text('Lanjut Foto Struk', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        isScrollControlled: true,
+                      );
+                    },
+                    icon: const Icon(Icons.document_scanner_outlined, color: AppColors.primaryTeal),
+                    label: const Text('Scan Struk Pakai AI 🤖', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryTeal)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.primaryTeal, width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Colors.grey.shade300)),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Text('Atau Input Manual', style: TextStyle(fontSize: 12, color: AppColors.textGrey)),
+                    ),
+                    Expanded(child: Divider(color: Colors.grey.shade300)),
+                  ],
+                ),
+                const SizedBox(height: 12),
 
                 // ── Pilih penerima ──
                 if (members.isNotEmpty) ...[
@@ -196,13 +301,30 @@ class GroupTransactionView extends GetView<GroupTransactionController> {
                     return null;
                   },
                 ),
-                _buildField(
+                Obx(() => _buildField(
                   controller: descCtrl,
                   label: 'Keterangan',
                   hint: 'Contoh: Bayar makan siang...',
                   validator: (v) =>
                       (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
-                ),
+                  suffixIcon: IconButton(
+                    icon: controller.isFetchingLocation.value 
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryTeal))
+                        : const Icon(Icons.location_on, color: AppColors.primaryTeal),
+                    onPressed: () async {
+                      if (controller.isFetchingLocation.value) return;
+                      final loc = await controller.getLocationAsString();
+                      if (loc != null) {
+                        final currentText = descCtrl.text;
+                        if (currentText.isEmpty) {
+                          descCtrl.text = '(📍 $loc)';
+                        } else {
+                          descCtrl.text = '$currentText (📍 $loc)';
+                        }
+                      }
+                    },
+                  ),
+                )),
                 const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
@@ -244,6 +366,7 @@ class GroupTransactionView extends GetView<GroupTransactionController> {
     required String hint,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
+    Widget? suffixIcon,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,6 +383,7 @@ class GroupTransactionView extends GetView<GroupTransactionController> {
           validator: validator,
           decoration: InputDecoration(
             hintText: hint,
+            suffixIcon: suffixIcon,
             hintStyle: const TextStyle(color: AppColors.textGrey),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

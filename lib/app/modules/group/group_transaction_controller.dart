@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 import '../../data/models/group_model.dart';
 import '../../data/models/group_transaction_model.dart';
@@ -14,6 +16,56 @@ class GroupTransactionController extends GetxController {
   final transactions = <GroupTransactionModel>[].obs;
   final isLoading = false.obs;
   final errorMsg = ''.obs;
+  final isFetchingLocation = false.obs;
+
+  // ─── LBS / GPS Helper ─────────────────────────────────
+  Future<String?> getLocationAsString() async {
+    isFetchingLocation.value = true;
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        Get.snackbar('GPS Mati', 'Tolong nyalakan GPS (Lokasi) HP kamu.',
+            backgroundColor: Colors.orangeAccent, colorText: Colors.white);
+        return null;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          Get.snackbar('Izin Ditolak', 'Izin lokasi dibutuhkan untuk fitur ini.',
+              backgroundColor: Colors.redAccent, colorText: Colors.white);
+          return null;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        Get.snackbar('Izin Ditolak Permanen', 'Silakan izinkan lewat pengaturan HP.',
+            backgroundColor: Colors.redAccent, colorText: Colors.white);
+        return null;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium);
+
+      final placemarks = await placemarkFromCoordinates(
+          position.latitude, position.longitude);
+
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        // Contoh: "Jl. Sudirman, Sleman"
+        final street = place.street ?? '';
+        final subLocality = place.subLocality ?? place.locality ?? '';
+        final combined = [street, subLocality].where((e) => e.isNotEmpty).join(', ');
+        return combined.isNotEmpty ? combined : 'Koordinat: ${position.latitude}, ${position.longitude}';
+      }
+    } catch (e) {
+      debugPrint('LBS Error: $e');
+    } finally {
+      isFetchingLocation.value = false;
+    }
+    return null;
+  }
 
   // ─── Computed: net balance per member ──────────────────
   // key=userId, value=netAmount (positif = dihutangi, negatif = berhutang)
@@ -32,6 +84,12 @@ class GroupTransactionController extends GetxController {
     if (id is num) return id.toInt();
     if (id is String) return int.tryParse(id) ?? 0;
     return 0;
+  }
+
+  String get currentUsername {
+    final user = AuthStorage.getUser();
+    if (user == null) return '';
+    return user['username']?.toString() ?? '';
   }
 
   @override
@@ -79,6 +137,7 @@ class GroupTransactionController extends GetxController {
 
   // ─── Create Transaction ─────────────────────────────────
   Future<void> createTransaction({
+    String? fromUsername,
     required String toUsername,
     required double amount,
     required String description,
@@ -89,13 +148,18 @@ class GroupTransactionController extends GetxController {
     if (token == null) return;
 
     try {
+      final body = {
+        'toUsername': toUsername,
+        'amount': amount,
+        'description': description,
+      };
+      if (fromUsername != null) {
+        body['fromUsername'] = fromUsername;
+      }
+
       final res = await _api.createGroupTransaction(
         g.id,
-        {
-          'toUsername': toUsername,
-          'amount': amount,
-          'description': description,
-        },
+        body,
         token,
       );
 

@@ -5,9 +5,11 @@ import 'package:get/get.dart';
 import '../../data/models/group_model.dart';
 import '../../data/services/api_service.dart';
 import '../../data/services/auth_storage.dart';
+import '../../data/services/local_db_service.dart';
 
 class GroupController extends GetxController {
   late final ApiService _api;
+  late final LocalDbService _localDb;
 
   final groups = <GroupModel>[].obs;
   final isLoading = false.obs;
@@ -33,6 +35,7 @@ class GroupController extends GetxController {
   void onInit() {
     super.onInit();
     _api = Get.find<ApiService>();
+    _localDb = Get.find<LocalDbService>();
     fetchGroups();
   }
 
@@ -40,9 +43,26 @@ class GroupController extends GetxController {
     final token = AuthStorage.getToken();
     if (token == null) return;
 
-    isLoading.value = true;
+    // 1. Coba baca dari Cache (SQLite) terlebih dahulu
+    final cachedData = await _localDb.getCache('groups_$currentUserId');
+    if (cachedData != null && cachedData is List) {
+      try {
+        groups.value = cachedData
+            .map((e) => GroupModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+        // Jangan tampilkan loading lama-lama jika sudah ada cache
+        isLoading.value = false;
+      } catch (e) {
+        debugPrint('GROUP CACHE PARSE ERROR: $e');
+      }
+    } else {
+      // Hanya tampilkan indikator loading jika cache benar-benar kosong
+      isLoading.value = true;
+    }
+
     errorMsg.value = '';
 
+    // 2. Tembak API untuk ambil data terbaru (Background / Foreground)
     try {
       final res = await _api.getGroups(token);
       if (res.statusCode == 200 && res.body != null) {
@@ -50,20 +70,27 @@ class GroupController extends GetxController {
         final raw = body['data'] ?? res.body;
         if (raw is List) {
           try {
+            // Update UI dengan data terbaru
             groups.value = raw
                 .map((e) => GroupModel.fromJson(e as Map<String, dynamic>))
                 .toList();
+            // Simpan ke Local DB untuk mempercepat loading berikutnya
+            await _localDb.saveCache('groups_$currentUserId', raw);
           } catch (e) {
-            errorMsg.value = 'Parsing error: $e';
+            if (groups.isEmpty) errorMsg.value = 'Parsing error: $e';
             debugPrint('GROUP PARSE ERROR: $e');
           }
         }
       } else {
         final body = res.body as Map<String, dynamic>?;
-        errorMsg.value = body?['message'] as String? ?? 'Gagal memuat grup';
+        if (groups.isEmpty) {
+          errorMsg.value = body?['message'] as String? ?? 'Gagal memuat grup';
+        }
       }
     } catch (e) {
-      errorMsg.value = 'Network error: $e';
+      if (groups.isEmpty) {
+        errorMsg.value = 'Network error: $e';
+      }
       debugPrint('GROUP NETWORK ERROR: $e');
     } finally {
       isLoading.value = false;

@@ -1,11 +1,12 @@
 import 'package:get/get.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiService extends GetConnect {
-  static const String _baseUrl =
-      'https://crumpled-judge-acetone.ngrok-free.dev/api/v1';
+  late final String _baseUrl;
 
   @override
   void onInit() {
+    _baseUrl = dotenv.env['API_URL'] ?? 'http://192.168.1.18:5000/api';
     httpClient.baseUrl = _baseUrl;
     httpClient.timeout = const Duration(seconds: 10);
 
