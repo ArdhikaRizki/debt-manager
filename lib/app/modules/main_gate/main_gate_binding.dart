@@ -6,6 +6,7 @@ import '../debt/debt_binding.dart';
 import '../group/group_binding.dart';
 import '../timezone/timezone_binding.dart';
 import '../currency/currency_binding.dart';
+import '../feedback/feedback_binding.dart';
 import 'main_gate_controller.dart';
 
 class MainGateBinding extends Bindings {
@@ -20,6 +21,7 @@ class MainGateBinding extends Bindings {
     GroupBinding().dependencies();
     TimezoneBinding().dependencies();
     CurrencyBinding().dependencies();
+    FeedbackBinding().dependencies();
     
     // (Jika ProfileView punya controller/binding, tambahkan juga di sini)
   }
