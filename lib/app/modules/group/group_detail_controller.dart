@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../data/models/group_model.dart';
+import '../../data/models/group_transaction_model.dart';
 import '../../data/services/api_service.dart';
 import '../../data/services/auth_storage.dart';
 
@@ -97,10 +98,70 @@ class GroupDetailController extends GetxController {
     }
   }
 
+  /// Cek apakah userId masih punya hutang aktif (belum lunas) di grup ini.
+  /// Mengambil data transaksi dari API, lalu hitung net balance.
+  Future<bool> _memberHasActiveDebt(int userId) async {
+    final token = AuthStorage.getToken();
+    if (token == null || group.value == null) return false;
+
+    try {
+      final res = await _api.getGroupTransactions(group.value!.id, token);
+      if (res.statusCode == 200 && res.body != null) {
+        final body = res.body as Map<String, dynamic>;
+        final raw = body['data'] ?? res.body;
+        if (raw is List) {
+          double net = 0;
+          for (final e in raw) {
+            final tx = GroupTransactionModel.fromJson(e as Map<String, dynamic>);
+            // Skip transaksi yang sudah lunas
+            final isApproved =
+                (tx.settlementRequests ?? []).any((r) => r.status == 'approved');
+            if (isApproved) continue;
+
+            if (tx.fromUserId == userId) net -= tx.amount;
+            if (tx.toUserId == userId) net += tx.amount;
+          }
+          // net < 0 → masih berhutang; net > 0 → masih dihutangi
+          // Keduanya berarti masih ada urusan keuangan yang belum selesai
+          return net != 0;
+        }
+      }
+    } catch (_) {
+      // Jika gagal fetch, anggap aman (boleh kick) — atau bisa dibalik sesuai kebutuhan
+    }
+    return false;
+  }
+
   Future<void> removeMember(int userId) async {
     if (group.value == null) return;
     final token = AuthStorage.getToken();
     if (token == null) return;
+
+    // ── Cek utang aktif sebelum kick ──────────────────────
+    isLoading.value = true;
+    final hasDebt = await _memberHasActiveDebt(userId);
+    isLoading.value = false;
+
+    if (hasDebt) {
+      final members = group.value?.members;
+      final username = members
+              ?.firstWhereOrNull((m) => m.userId == userId)
+              ?.user
+              ?.username ??
+          'User #$userId';
+      Get.snackbar(
+        'Tidak Bisa Kick',
+        '$username masih memiliki hutang aktif di grup ini. Selesaikan semua hutang terlebih dahulu.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFFF9800),
+        colorText: const Color(0xFFFFFFFF),
+        margin: const EdgeInsets.all(12),
+        duration: const Duration(seconds: 4),
+        icon: const Icon(Icons.warning_amber_rounded, color: Colors.white),
+      );
+      return;
+    }
+    // ─────────────────────────────────────────────────────
 
     try {
       final res = await _api.removeGroupMember(group.value!.id, userId, token);

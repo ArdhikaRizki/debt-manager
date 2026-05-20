@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/group_transaction_model.dart';
@@ -502,10 +503,7 @@ class _TxCard extends StatelessWidget {
                         color: !isIAm ? Colors.green.shade600 : AppColors.textDark)),
               ]),
               const SizedBox(height: 3),
-              Text(tx.description.isNotEmpty ? tx.description : '-',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textGrey),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis),
+              _buildDescription(tx.description),
               const SizedBox(height: 4),
               Text(_fmtDate(tx.createdAt),
                   style: const TextStyle(fontSize: 11, color: AppColors.textGrey)),
@@ -605,6 +603,102 @@ class _TxCard extends StatelessWidget {
           ]),
         ]),
       ),
+    );
+  }
+
+  /// Ekstrak koordinat dari format "Koordinat: lat, lng" atau nama tempat,
+  /// lalu buka di Google Maps jika teks mengandung 📍.
+  Future<void> _openLocation(String locationText) async {
+    // Coba parse koordinat langsung: "Koordinat: -7.123, 110.456"
+    final coordRegex = RegExp(r'Koordinat:\s*([-\d.]+),\s*([-\d.]+)');
+    final coordMatch = coordRegex.firstMatch(locationText);
+
+    Uri mapsUri;
+    if (coordMatch != null) {
+      final lat = coordMatch.group(1)!;
+      final lng = coordMatch.group(2)!;
+      mapsUri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+    } else {
+      // Pakai nama lokasi sebagai query search
+      final encoded = Uri.encodeComponent(locationText);
+      mapsUri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$encoded');
+    }
+
+    if (await canLaunchUrl(mapsUri)) {
+      await launchUrl(mapsUri, mode: LaunchMode.externalApplication);
+    } else {
+      Get.snackbar('Error', 'Tidak bisa membuka Maps',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white);
+    }
+  }
+
+  /// Render deskripsi: bagian 📍 ... dibuat sebagai chip tappable berwarna biru.
+  Widget _buildDescription(String description) {
+    if (description.isEmpty) {
+      return const Text('-',
+          style: TextStyle(fontSize: 12, color: AppColors.textGrey));
+    }
+
+    // Pisahkan bagian lokasi dari teks biasa
+    // Format: "teks biasa (📍 nama lokasi)" atau hanya "📍 nama lokasi"
+    final locRegex = RegExp(r'\(📍\s*([^)]+)\)|📍\s*(.+)$');
+    final match = locRegex.firstMatch(description);
+
+    if (match == null) {
+      return Text(description,
+          style: const TextStyle(fontSize: 12, color: AppColors.textGrey),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis);
+    }
+
+    final locationText = (match.group(1) ?? match.group(2) ?? '').trim();
+    final beforeLoc = description.substring(0, match.start).trim();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (beforeLoc.isNotEmpty) ...[
+          Text(beforeLoc,
+              style: const TextStyle(fontSize: 12, color: AppColors.textGrey),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 3),
+        ],
+        GestureDetector(
+          onTap: () => _openLocation(locationText),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.shade200),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.location_on, size: 12, color: Colors.blue.shade700),
+                const SizedBox(width: 3),
+                Flexible(
+                  child: Text(
+                    locationText,
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.blue.shade700,
+                        fontWeight: FontWeight.w500,
+                        decoration: TextDecoration.underline),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 3),
+                Icon(Icons.open_in_new, size: 10, color: Colors.blue.shade500),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

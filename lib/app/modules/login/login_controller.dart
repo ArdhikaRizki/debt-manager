@@ -15,6 +15,10 @@ class LoginController extends GetxController {
 
   late final ApiService _apiService;
   late final BiometricController _biometricC;
+  // Di dalam LoginController kamu:
+var isPasswordHidden = true.obs;
+
+
 
   @override
   void onInit() {
@@ -23,6 +27,10 @@ class LoginController extends GetxController {
     _biometricC = Get.put(BiometricController());
     _checkBiometric();
   }
+
+  void togglePasswordVisibility() {
+  isPasswordHidden.value = !isPasswordHidden.value;
+}
 
   Future<void> _saveDeviceTokenToBackend(String authToken) async {
     try {
