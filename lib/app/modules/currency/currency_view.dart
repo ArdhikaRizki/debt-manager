@@ -8,7 +8,7 @@ import 'currency_controller.dart';
 class CurrencyView extends GetView<CurrencyController> {
   const CurrencyView({super.key});
 
-  static const _grad = [Color(0xFFFF6B6B), Color(0xFFFF8E53)];
+  static const _grad = [AppColors.primaryTeal, AppColors.primaryBlue];
 
   @override
   Widget build(BuildContext context) {
@@ -42,15 +42,8 @@ class CurrencyView extends GetView<CurrencyController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Back + Title + Refresh
           Row(
             children: [
-              GestureDetector(
-                onTap: () => Get.back(),
-                child: const Icon(Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white, size: 20),
-              ),
-              const SizedBox(width: 12),
               const Expanded(
                 child: Text(
                   ' Konversi Mata Uang',
@@ -135,7 +128,7 @@ class CurrencyView extends GetView<CurrencyController> {
     return Obx(() {
       if (controller.isLoadingList.value && controller.allCurrencies.isEmpty) {
         return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B6B)));
+            child: CircularProgressIndicator(color: AppColors.primaryTeal));
       }
       if (controller.errorMsg.value.isNotEmpty &&
           controller.filteredResultCurrencies.isEmpty) {
@@ -191,7 +184,6 @@ class CurrencyView extends GetView<CurrencyController> {
               final all   = controller.allCurrencies;
               final List<String> codes;
               if (query.isEmpty) {
-                // Buat copy dari const list agar bisa di-iterate (tidak perlu sort)
                 codes = List<String>.from(CurrencyController.popularCodes);
               } else {
                 final filtered = all.keys.where((c) {
@@ -224,7 +216,7 @@ class CurrencyView extends GetView<CurrencyController> {
                         boxShadow: selected
                             ? [
                                 BoxShadow(
-                                    color: const Color(0xFFFF6B6B).withOpacity(0.35),
+                                    color: AppColors.primaryTeal.withOpacity(0.35),
                                     blurRadius: 6,
                                     offset: const Offset(0, 2))
                               ]
@@ -289,7 +281,7 @@ class CurrencyView extends GetView<CurrencyController> {
                   ? const SizedBox(
                       width: 20, height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Color(0xFFFF6B6B)))
+                          strokeWidth: 2, color: AppColors.primaryTeal))
                   : const SizedBox.shrink()),
             ],
           ),
@@ -319,7 +311,7 @@ class CurrencyView extends GetView<CurrencyController> {
   // ─── RESULT CARD ─────────────────────────────────────────────────────────
   Widget _buildResultCard(String code) {
     final result = controller.convertTo(code);
-    final fmt    = controller.formatAmount(result);
+    // final fmt    = controller.formatAmount(result); // Sudah tidak dipakai lagi langsung di UI
     final name   = controller.nameOf(code);
     final flag   = controller.flagOf(code);
 
@@ -338,8 +330,8 @@ class CurrencyView extends GetView<CurrencyController> {
           Container(
             width: 40,
             height: 40,
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFF0EE),
+            decoration: BoxDecoration(
+              color: AppColors.primaryTeal.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -370,7 +362,7 @@ class CurrencyView extends GetView<CurrencyController> {
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFFFF6B6B),
+                color: AppColors.primaryTeal,
               ),
             );
           }),
@@ -398,7 +390,7 @@ class CurrencyView extends GetView<CurrencyController> {
               icon: const Icon(Icons.refresh),
               label: const Text('Coba Lagi'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF6B6B),
+                backgroundColor: AppColors.primaryTeal,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),

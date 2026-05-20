@@ -47,7 +47,7 @@ class HomeView extends GetView<HomeController> {
           );
         }),
       ),
-      bottomNavigationBar: _buildBottomNav(),
+      // bottomNavigationBar: _buildBottomNav(),
     );
   }
 
@@ -88,19 +88,19 @@ class HomeView extends GetView<HomeController> {
                 ),
               ],
             ),
-            GestureDetector(
-              onTap: () {
-                Get.offAllNamed(AppRoutes.login);
-              },
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.logout, color: Colors.white, size: 20),
-              ),
-            ),
+            // GestureDetector(
+            //   onTap: () {
+            //     Get.offAllNamed(AppRoutes.login);
+            //   },
+            //   child: Container(
+            //     padding: const EdgeInsets.all(8),
+            //     decoration: BoxDecoration(
+            //       color: Colors.white.withOpacity(0.2),
+            //       shape: BoxShape.circle,
+            //     ),
+            //     child: const Icon(Icons.logout, color: Colors.white, size: 20),
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -349,52 +349,52 @@ class HomeView extends GetView<HomeController> {
   }
 
   // ─── BOTTOM NAV ────────────────────────────────────────
-  Widget _buildBottomNav() {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: AppColors.primaryTeal,
-      unselectedItemColor: AppColors.textGrey,
-      backgroundColor: Colors.white,
-      selectedFontSize: 10,
-      unselectedFontSize: 10,
-      currentIndex: 0,
-      onTap: (index) {
-        switch (index) {
-          case 0:
-            break;
-          case 1:
-            Get.toNamed(AppRoutes.debt);
-            break;
-          case 2:
-            Get.toNamed(AppRoutes.group);
-            break;
-          case 3:
-            Get.toNamed(AppRoutes.timezone);
-            break;
-          case 4:
-            Get.toNamed(AppRoutes.currency);
-            break;
-          case 5:
-            Get.toNamed(AppRoutes.profile);
-            break;
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded), label: 'Home'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined), label: 'Hutang'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.group_outlined), label: 'Grup'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.access_time_rounded), label: 'Waktu'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.currency_exchange_rounded), label: 'Kurs'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline_rounded), label: 'Profil'),
-      ],
-    );
-  }
+  // Widget _buildBottomNav() {
+  //   return BottomNavigationBar(
+  //     type: BottomNavigationBarType.fixed,
+  //     selectedItemColor: AppColors.primaryTeal,
+  //     unselectedItemColor: AppColors.textGrey,
+  //     backgroundColor: Colors.white,
+  //     selectedFontSize: 10,
+  //     unselectedFontSize: 10,
+  //     currentIndex: 0,
+  //     onTap: (index) {
+  //       switch (index) {
+  //         case 0:
+  //           break;
+  //         case 1:
+  //           Get.toNamed(AppRoutes.debt);
+  //           break;
+  //         case 2:
+  //           Get.toNamed(AppRoutes.group);
+  //           break;
+  //         case 3:
+  //           Get.toNamed(AppRoutes.timezone);
+  //           break;
+  //         case 4:
+  //           Get.toNamed(AppRoutes.currency);
+  //           break;
+  //         case 5:
+  //           Get.toNamed(AppRoutes.profile);
+  //           break;
+  //       }
+  //     },
+  //     items: const [
+  //       BottomNavigationBarItem(
+  //           icon: Icon(Icons.home_rounded), label: 'Home'),
+  //       BottomNavigationBarItem(
+  //           icon: Icon(Icons.receipt_long_outlined), label: 'Hutang'),
+  //       BottomNavigationBarItem(
+  //           icon: Icon(Icons.group_outlined), label: 'Grup'),
+  //       BottomNavigationBarItem(
+  //           icon: Icon(Icons.access_time_rounded), label: 'Waktu'),
+  //       BottomNavigationBarItem(
+  //           icon: Icon(Icons.currency_exchange_rounded), label: 'Kurs'),
+  //       BottomNavigationBarItem(
+  //           icon: Icon(Icons.person_outline_rounded), label: 'Profil'),
+  //     ],
+  //   );
+  // }
 }
 
 // ─── HELPER FUNCTION ───────────────────────────────────
@@ -544,6 +544,11 @@ class _StatusChip extends StatelessWidget {
         bg = Colors.green.shade50;
         fg = Colors.green.shade700;
         label = 'Lunas';
+        break;
+      case 'rejected':
+        bg = Colors.red.shade50;
+        fg = Colors.red.shade700;
+        label = 'Ditolak';
         break;
       default:
         bg = Colors.orange.shade50;

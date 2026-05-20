@@ -65,23 +65,7 @@ class LoginView extends StatelessWidget {
                         isPass: true,
                         textController: controller.passwordController,
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(children: [
-                            Icon(Icons.check_box_outline_blank, color: AppColors.primaryTeal),
-                            SizedBox(width: 5),
-                            Text("Remember Me",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textDark)),
-                          ]),
-                          Text("Forgot Password?",
-                              style: TextStyle(
-                                  color: AppColors.primaryTeal,
-                                  fontWeight: FontWeight.bold)),
-                        ],
-                      ),
+                      SizedBox.shrink(),
                     ],
                   ),
                   SizedBox(height: 24),

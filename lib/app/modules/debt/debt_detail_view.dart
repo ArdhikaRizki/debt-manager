@@ -352,10 +352,20 @@ class _StatusBadge extends StatelessWidget {
         fg = Colors.blue.shade800;
         label = 'Dikonfirmasi';
         break;
+      case 'settlement_requested':
+        bg = Colors.purple.shade100;
+        fg = Colors.purple.shade800;
+        label = 'Menunggu Pelunasan';
+        break;
       case 'settled':
         bg = Colors.green.shade100;
         fg = Colors.green.shade800;
         label = 'Lunas';
+        break;
+      case 'rejected':
+        bg = Colors.red.shade100;
+        fg = Colors.red.shade800;
+        label = 'Ditolak';
         break;
       default:
         bg = Colors.orange.shade100;

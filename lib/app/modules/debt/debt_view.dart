@@ -21,10 +21,10 @@ class DebtView extends GetView<DebtController> {
           title: const Text('Daftar Hutang',
               style: TextStyle(fontWeight: FontWeight.bold)),
           automaticallyImplyLeading: false,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            onPressed: () => Get.back(),
-          ),
+          // leading: IconButton(
+          //   icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          //   onPressed: () => Get.back(),
+          // ),
           bottom: const TabBar(
                   labelColor: Colors.white,
                   unselectedLabelColor: Colors.white60,
@@ -419,10 +419,20 @@ class _StatusChip extends StatelessWidget {
         fg = Colors.blue.shade700;
         label = 'Dikonfirmasi';
         break;
+      case 'settlement_requested':
+        bg = Colors.purple.shade50;
+        fg = Colors.purple.shade700;
+        label = 'Menunggu Pelunasan';
+        break;
       case 'settled':
         bg = Colors.green.shade50;
         fg = Colors.green.shade700;
         label = 'Lunas';
+        break;
+      case 'rejected':
+        bg = Colors.red.shade50;
+        fg = Colors.red.shade700;
+        label = 'Ditolak';
         break;
       default:
         bg = Colors.orange.shade50;

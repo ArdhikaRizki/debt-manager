@@ -148,7 +148,8 @@ class LoginController extends GetxController {
         );
 
         // Navigate ke home
-        Get.offAllNamed(AppRoutes.home);
+        // Get.offAllNamed(AppRoutes.home);
+        Get.offAllNamed(AppRoutes.mainGate);
       } else {
         // Error dari server
         final body = response.body as Map<String, dynamic>?;
