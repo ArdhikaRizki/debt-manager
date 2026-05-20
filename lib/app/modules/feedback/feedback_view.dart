@@ -25,25 +25,119 @@ class FeedbackView extends GetView<FeedbackController> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            TextField(
-              controller: controller.saranController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: 'Saran',
-                alignLabelWithHint: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
+            // SARAN FIELD
+            Obx(() => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: controller.saranController,
+                  maxLines: 4,
+                  maxLength: FeedbackController.maxCharsPerField,
+                  decoration: InputDecoration(
+                    labelText: 'Saran',
+                    labelStyle: TextStyle(
+                      color: controller.saranError.value.isEmpty 
+                        ? Colors.grey 
+                        : Colors.red,
+                    ),
+                    alignLabelWithHint: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: controller.saranError.value.isEmpty 
+                          ? Colors.grey.shade300 
+                          : Colors.red,
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: controller.saranError.value.isEmpty 
+                          ? Colors.blue 
+                          : Colors.red,
+                        width: 2,
+                      ),
+                    ),
+                    helperText: controller.saranError.value.isNotEmpty 
+                      ? controller.saranError.value 
+                      : null,
+                    helperStyle: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+                if (controller.saranCharCount.value > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      '${controller.saranCharCount.value}/${FeedbackController.maxCharsPerField}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: controller.saranCharCount.value > FeedbackController.maxCharsPerField 
+                          ? Colors.red 
+                          : Colors.grey,
+                      ),
+                    ),
+                  ),
+              ],
+            )),
             const SizedBox(height: 16),
-            TextField(
-              controller: controller.kesanController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: 'Kesan',
-                alignLabelWithHint: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
+            // KESAN FIELD
+            Obx(() => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: controller.kesanController,
+                  maxLines: 4,
+                  maxLength: FeedbackController.maxCharsPerField,
+                  decoration: InputDecoration(
+                    labelText: 'Kesan',
+                    labelStyle: TextStyle(
+                      color: controller.kesanError.value.isEmpty 
+                        ? Colors.grey 
+                        : Colors.red,
+                    ),
+                    alignLabelWithHint: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: controller.kesanError.value.isEmpty 
+                          ? Colors.grey.shade300 
+                          : Colors.red,
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: controller.kesanError.value.isEmpty 
+                          ? Colors.blue 
+                          : Colors.red,
+                        width: 2,
+                      ),
+                    ),
+                    helperText: controller.kesanError.value.isNotEmpty 
+                      ? controller.kesanError.value 
+                      : null,
+                    helperStyle: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+                if (controller.kesanCharCount.value > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      '${controller.kesanCharCount.value}/${FeedbackController.maxCharsPerField}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: controller.kesanCharCount.value > FeedbackController.maxCharsPerField 
+                          ? Colors.red 
+                          : Colors.grey,
+                      ),
+                    ),
+                  ),
+              ],
+            )),
             const SizedBox(height: 16),
             Obx(() => SizedBox(
               width: double.infinity,

@@ -91,19 +91,39 @@ class LocalDbService extends GetxService {
   }
 
   // Menyimpan Saran & Kesan TPM ke SQLite lokal
-  Future<void> saveFeedback(String saran, String kesan) async {
+  Future<bool> saveFeedback(String saran, String kesan) async {
     try {
+      // Validasi input
+      if (saran.isEmpty || kesan.isEmpty) {
+        throw Exception('Saran dan Kesan tidak boleh kosong');
+      }
+
+      // Sanitasi input: hapus karakter berbahaya (single/double quotes)
+      final sanitizedSaran = _sanitizeInput(saran);
+      final sanitizedKesan = _sanitizeInput(kesan);
+
       await _db.insert(
         'feedback_tpm',
         {
-          'saran': saran,
-          'kesan': kesan,
+          'saran': sanitizedSaran,
+          'kesan': sanitizedKesan,
           'created_at': DateTime.now().millisecondsSinceEpoch,
         },
       );
+      return true;
     } catch (e) {
       print('Error saving feedback: $e');
+      return false;
     }
+  }
+
+  // Fungsi untuk sanitasi input (menghilangkan quotes berbahaya)
+  String _sanitizeInput(String input) {
+    // Ganti single quote dengan apostrophe yang aman
+    String sanitized = input.replaceAll("'", "'");
+    // Ganti double quote dengan safe double quote
+    sanitized = sanitized.replaceAll('"', '"');
+    return sanitized.trim();
   }
 
   // Mengambil List Saran & Kesan TPM dari SQLite lokal
