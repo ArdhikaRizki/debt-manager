@@ -15,6 +15,7 @@ class CurrencyView extends GetView<CurrencyController> {
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4F8),
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             _buildHeader(context),
@@ -27,18 +28,21 @@ class CurrencyView extends GetView<CurrencyController> {
 
   // ─── HEADER ──────────────────────────────────────────────────────────────
   Widget _buildHeader(BuildContext context) {
+    final topInset = MediaQuery.of(context).padding.top;
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-            colors: _grad,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight),
+          colors: _grad,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(28),
           bottomRight: Radius.circular(28),
         ),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+      padding: EdgeInsets.fromLTRB(20, topInset + 20, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -48,9 +52,10 @@ class CurrencyView extends GetView<CurrencyController> {
                 child: Text(
                   ' Konversi Mata Uang',
                   style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold),
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               GestureDetector(
@@ -61,19 +66,24 @@ class CurrencyView extends GetView<CurrencyController> {
                     color: Colors.white.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.refresh_rounded,
-                      color: Colors.white, size: 20),
+                  child: const Icon(
+                    Icons.refresh_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 4),
-          Obx(() => Text(
-            controller.lastUpdated.value.isNotEmpty
-                ? 'Kurs: ${controller.lastUpdated.value}'
-                : 'Memuat data kurs...',
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
-          )),
+          Obx(
+            () => Text(
+              controller.lastUpdated.value.isNotEmpty
+                  ? 'Kurs: ${controller.lastUpdated.value}'
+                  : 'Memuat data kurs...',
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ),
           const SizedBox(height: 16),
 
           // Amount input
@@ -90,9 +100,10 @@ class CurrencyView extends GetView<CurrencyController> {
                   return Text(
                     '${controller.flagOf(code)}  ${code.toUpperCase()}',
                     style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold),
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
                   );
                 }),
                 const SizedBox(width: 10),
@@ -100,14 +111,17 @@ class CurrencyView extends GetView<CurrencyController> {
                   child: TextField(
                     controller: controller.amountController,
                     onChanged: controller.onAmountChanged,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                     ],
                     style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold),
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
                     decoration: const InputDecoration(
                       border: InputBorder.none,
                       hintText: '0',
@@ -128,7 +142,8 @@ class CurrencyView extends GetView<CurrencyController> {
     return Obx(() {
       if (controller.isLoadingList.value && controller.allCurrencies.isEmpty) {
         return const Center(
-            child: CircularProgressIndicator(color: AppColors.primaryTeal));
+          child: CircularProgressIndicator(color: AppColors.primaryTeal),
+        );
       }
       if (controller.errorMsg.value.isNotEmpty &&
           controller.filteredResultCurrencies.isEmpty) {
@@ -151,11 +166,14 @@ class CurrencyView extends GetView<CurrencyController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Dari mata uang:',
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textGrey)),
+          const Text(
+            'Dari mata uang:',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textGrey,
+            ),
+          ),
           const SizedBox(height: 8),
           // Search base
           TextField(
@@ -163,8 +181,15 @@ class CurrencyView extends GetView<CurrencyController> {
             onChanged: (v) => controller.searchBase.value = v.toLowerCase(),
             decoration: InputDecoration(
               hintText: 'Cari mata uang...',
-              hintStyle: const TextStyle(fontSize: 13, color: AppColors.textGrey),
-              prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.textGrey),
+              hintStyle: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textGrey,
+              ),
+              prefixIcon: const Icon(
+                Icons.search,
+                size: 18,
+                color: AppColors.textGrey,
+              ),
               contentPadding: const EdgeInsets.symmetric(vertical: 8),
               isDense: true,
               filled: true,
@@ -181,15 +206,18 @@ class CurrencyView extends GetView<CurrencyController> {
             height: 38,
             child: Obx(() {
               final query = controller.searchBase.value;
-              final all   = controller.allCurrencies;
+              final all = controller.allCurrencies;
               final List<String> codes;
               if (query.isEmpty) {
                 codes = List<String>.from(CurrencyController.popularCodes);
               } else {
-                final filtered = all.keys.where((c) {
-                  return c.contains(query) ||
-                      (all[c]?.toLowerCase().contains(query) ?? false);
-                }).take(30).toList();
+                final filtered = all.keys
+                    .where((c) {
+                      return c.contains(query) ||
+                          (all[c]?.toLowerCase().contains(query) ?? false);
+                    })
+                    .take(30)
+                    .toList();
                 filtered.sort();
                 codes = filtered;
               }
@@ -199,14 +227,16 @@ class CurrencyView extends GetView<CurrencyController> {
                 itemCount: codes.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (_, i) {
-                  final code     = codes[i];
+                  final code = codes[i];
                   final selected = controller.selectedBase.value == code;
                   return GestureDetector(
                     onTap: () => controller.changeBase(code),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         gradient: selected
                             ? const LinearGradient(colors: _grad)
@@ -216,9 +246,12 @@ class CurrencyView extends GetView<CurrencyController> {
                         boxShadow: selected
                             ? [
                                 BoxShadow(
-                                    color: AppColors.primaryTeal.withOpacity(0.35),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2))
+                                  color: AppColors.primaryTeal.withOpacity(
+                                    0.35,
+                                  ),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
                               ]
                             : null,
                       ),
@@ -257,10 +290,15 @@ class CurrencyView extends GetView<CurrencyController> {
                   controller: controller.searchResultController,
                   decoration: InputDecoration(
                     hintText: 'Filter hasil konversi...',
-                    hintStyle:
-                        const TextStyle(fontSize: 13, color: AppColors.textGrey),
-                    prefixIcon:
-                        const Icon(Icons.filter_list, size: 18, color: AppColors.textGrey),
+                    hintStyle: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textGrey,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.filter_list,
+                      size: 18,
+                      color: AppColors.textGrey,
+                    ),
                     contentPadding: const EdgeInsets.symmetric(vertical: 8),
                     isDense: true,
                     filled: true,
@@ -277,12 +315,18 @@ class CurrencyView extends GetView<CurrencyController> {
                 ),
               ),
               const SizedBox(width: 8),
-              Obx(() => controller.isLoadingRates.value
-                  ? const SizedBox(
-                      width: 20, height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: AppColors.primaryTeal))
-                  : const SizedBox.shrink()),
+              Obx(
+                () => controller.isLoadingRates.value
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primaryTeal,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
             ],
           ),
         ),
@@ -293,8 +337,10 @@ class CurrencyView extends GetView<CurrencyController> {
             final list = controller.filteredResultCurrencies;
             if (list.isEmpty && !controller.isLoadingRates.value) {
               return const Center(
-                child: Text('Tidak ada mata uang ditemukan',
-                    style: TextStyle(color: AppColors.textGrey)),
+                child: Text(
+                  'Tidak ada mata uang ditemukan',
+                  style: TextStyle(color: AppColors.textGrey),
+                ),
               );
             }
             return ListView.builder(
@@ -312,8 +358,8 @@ class CurrencyView extends GetView<CurrencyController> {
   Widget _buildResultCard(String code) {
     final result = controller.convertTo(code);
     // final fmt    = controller.formatAmount(result); // Sudah tidak dipakai lagi langsung di UI
-    final name   = controller.nameOf(code);
-    final flag   = controller.flagOf(code);
+    final name = controller.nameOf(code);
+    final flag = controller.flagOf(code);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -322,7 +368,7 @@ class CurrencyView extends GetView<CurrencyController> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 5, offset: Offset(0, 2))
+          BoxShadow(color: Colors.black12, blurRadius: 5, offset: Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -335,23 +381,31 @@ class CurrencyView extends GetView<CurrencyController> {
               shape: BoxShape.circle,
             ),
             child: Center(
-                child: Text(flag, style: const TextStyle(fontSize: 18))),
+              child: Text(flag, style: const TextStyle(fontSize: 18)),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(code.toUpperCase(),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        color: AppColors.textDark)),
-                Text(name,
-                    style: const TextStyle(
-                        fontSize: 11, color: AppColors.textGrey),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
+                Text(
+                  code.toUpperCase(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textGrey,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
@@ -381,9 +435,13 @@ class CurrencyView extends GetView<CurrencyController> {
           children: [
             const Icon(Icons.wifi_off_rounded, size: 64, color: Colors.red),
             const SizedBox(height: 16),
-            Obx(() => Text(controller.errorMsg.value,
+            Obx(
+              () => Text(
+                controller.errorMsg.value,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textGrey))),
+                style: const TextStyle(color: AppColors.textGrey),
+              ),
+            ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: controller.refresh,
@@ -393,7 +451,8 @@ class CurrencyView extends GetView<CurrencyController> {
                 backgroundColor: AppColors.primaryTeal,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],

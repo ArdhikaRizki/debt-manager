@@ -14,6 +14,7 @@ class HomeView extends GetView<HomeController> {
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4F8),
       body: SafeArea(
+        top: false,
         child: Obx(() {
           if (controller.isLoading.value) {
             return const Center(
@@ -25,22 +26,23 @@ class HomeView extends GetView<HomeController> {
             onRefresh: controller.fetchDashboard,
             child: CustomScrollView(
               slivers: [
-                _buildHeader(),
+                _buildHeader(context),
                 SliverToBoxAdapter(child: _buildSummaryCards()),
                 SliverToBoxAdapter(child: _buildQuickActions()),
                 SliverToBoxAdapter(child: _buildRecentDebtsHeader()),
                 controller.errorMsg.value.isNotEmpty
                     ? SliverToBoxAdapter(
-                        child: _buildErrorState(controller.errorMsg.value))
+                        child: _buildErrorState(controller.errorMsg.value),
+                      )
                     : controller.recentDebts.isEmpty
-                        ? SliverToBoxAdapter(child: _buildEmptyState())
-                        : SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) => _buildDebtCard(
-                                  controller.recentDebts[index]),
-                              childCount: controller.recentDebts.length,
-                            ),
-                          ),
+                    ? SliverToBoxAdapter(child: _buildEmptyState())
+                    : SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) =>
+                              _buildDebtCard(controller.recentDebts[index]),
+                          childCount: controller.recentDebts.length,
+                        ),
+                      ),
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
             ),
@@ -52,7 +54,9 @@ class HomeView extends GetView<HomeController> {
   }
 
   // ─── HEADER ────────────────────────────────────────────
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
+    final topInset = MediaQuery.of(context).padding.top;
+
     return SliverToBoxAdapter(
       child: Container(
         decoration: const BoxDecoration(
@@ -66,7 +70,7 @@ class HomeView extends GetView<HomeController> {
             bottomRight: Radius.circular(28),
           ),
         ),
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+        padding: EdgeInsets.fromLTRB(24, topInset + 20, 24, 28),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -109,32 +113,34 @@ class HomeView extends GetView<HomeController> {
 
   // ─── SUMMARY CARDS ─────────────────────────────────────
   Widget _buildSummaryCards() {
-    return Obx(() => Padding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _SummaryCard(
-                  label: 'Saya Berhutang',
-                  amount: controller.totalIOwe,
-                  icon: Icons.arrow_upward_rounded,
-                  iconColor: Colors.red.shade400,
-                  bgColor: Colors.red.shade50,
-                ),
+    return Obx(
+      () => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+        child: Row(
+          children: [
+            Expanded(
+              child: _SummaryCard(
+                label: 'Saya Berhutang',
+                amount: controller.totalIOwe,
+                icon: Icons.arrow_upward_rounded,
+                iconColor: Colors.red.shade400,
+                bgColor: Colors.red.shade50,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _SummaryCard(
-                  label: 'Saya Dihutangi',
-                  amount: controller.totalOwedToMe,
-                  icon: Icons.arrow_downward_rounded,
-                  iconColor: Colors.green.shade600,
-                  bgColor: Colors.green.shade50,
-                ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _SummaryCard(
+                label: 'Saya Dihutangi',
+                amount: controller.totalOwedToMe,
+                icon: Icons.arrow_downward_rounded,
+                iconColor: Colors.green.shade600,
+                bgColor: Colors.green.shade50,
               ),
-            ],
-          ),
-        ));
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   // ─── QUICK ACTIONS ─────────────────────────────────────
@@ -185,9 +191,10 @@ class HomeView extends GetView<HomeController> {
             child: const Text(
               'Lihat Semua →',
               style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.primaryTeal,
-                  fontWeight: FontWeight.w600),
+                fontSize: 13,
+                color: AppColors.primaryTeal,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -206,7 +213,10 @@ class HomeView extends GetView<HomeController> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       child: GestureDetector(
         onTap: () async {
-          final result = await Get.toNamed(AppRoutes.debtDetail, arguments: debt);
+          final result = await Get.toNamed(
+            AppRoutes.debtDetail,
+            arguments: debt,
+          );
           if (result == true) {
             Get.find<HomeController>().fetchDashboard();
           }
@@ -214,8 +224,9 @@ class HomeView extends GetView<HomeController> {
         child: Card(
           elevation: 2,
           shadowColor: Colors.black12,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
@@ -224,9 +235,7 @@ class HomeView extends GetView<HomeController> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: isOwner
-                        ? Colors.green.shade50
-                        : Colors.red.shade50,
+                    color: isOwner ? Colors.green.shade50 : Colors.red.shade50,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -260,7 +269,9 @@ class HomeView extends GetView<HomeController> {
                       Text(
                         debt.description,
                         style: const TextStyle(
-                            fontSize: 12, color: AppColors.textGrey),
+                          fontSize: 12,
+                          color: AppColors.textGrey,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -299,15 +310,19 @@ class HomeView extends GetView<HomeController> {
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 32),
       child: Column(
         children: [
-          Icon(Icons.receipt_long_outlined,
-              size: 72, color: AppColors.textGrey.withOpacity(0.5)),
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 72,
+            color: AppColors.textGrey.withOpacity(0.5),
+          ),
           const SizedBox(height: 16),
           const Text(
             'Belum ada data hutang',
             style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textGrey),
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textGrey,
+            ),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -328,9 +343,10 @@ class HomeView extends GetView<HomeController> {
         children: [
           const Icon(Icons.wifi_off_rounded, size: 60, color: Colors.red),
           const SizedBox(height: 12),
-          Text(msg,
-              style:
-                  const TextStyle(fontSize: 14, color: AppColors.textGrey)),
+          Text(
+            msg,
+            style: const TextStyle(fontSize: 14, color: AppColors.textGrey),
+          ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: controller.fetchDashboard,
@@ -340,7 +356,8 @@ class HomeView extends GetView<HomeController> {
               backgroundColor: AppColors.primaryTeal,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
         ],
@@ -432,7 +449,7 @@ class _SummaryCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
+          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2)),
         ],
       ),
       child: Column(
@@ -440,16 +457,18 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration:
-                BoxDecoration(color: bgColor, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
             child: Icon(icon, color: iconColor, size: 18),
           ),
           const SizedBox(height: 10),
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textGrey,
-                  fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textGrey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             _formatCurrency(amount),
@@ -490,9 +509,10 @@ class _ActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-                color: color.withOpacity(0.35),
-                blurRadius: 8,
-                offset: const Offset(0, 3))
+              color: color.withOpacity(0.35),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
           ],
         ),
         child: Row(
@@ -504,9 +524,10 @@ class _ActionButton extends StatelessWidget {
               child: Text(
                 label,
                 style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -562,9 +583,10 @@ class _StatusChip extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(label,
-          style:
-              TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: fg)),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: fg),
+      ),
     );
   }
 }

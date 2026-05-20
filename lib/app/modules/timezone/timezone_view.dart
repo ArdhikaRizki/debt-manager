@@ -13,9 +13,10 @@ class TimezoneView extends GetView<TimezoneController> {
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4F8),
       body: SafeArea(
+        top: false,
         child: CustomScrollView(
           slivers: [
-            _buildHeader(),
+            _buildHeader(context),
             SliverToBoxAdapter(child: _buildLiveClocks()),
             SliverToBoxAdapter(child: _buildConverterCard(context)),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -26,7 +27,9 @@ class TimezoneView extends GetView<TimezoneController> {
   }
 
   // ─── HEADER ────────────────────────────────────────────────────────────────
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
+    final topInset = MediaQuery.of(context).padding.top;
+
     return SliverToBoxAdapter(
       child: Container(
         decoration: const BoxDecoration(
@@ -40,10 +43,10 @@ class TimezoneView extends GetView<TimezoneController> {
             bottomRight: Radius.circular(28),
           ),
         ),
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+        padding: EdgeInsets.fromLTRB(24, topInset + 20, 24, 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-         children: [
+          children: [
             const Text(
               '🕐 Konversi Waktu',
               style: TextStyle(
@@ -83,41 +86,57 @@ class TimezoneView extends GetView<TimezoneController> {
           ),
           Row(
             children: [
-              Expanded(child: Obx(() => _ClockCard(
-                label: 'WIB',
-                sublabel: 'UTC+7',
-                time: controller.wibTime.value,
-                emoji: '🏙️',
-                color: AppColors.primaryTeal,
-              ))),
+              Expanded(
+                child: Obx(
+                  () => _ClockCard(
+                    label: 'WIB',
+                    sublabel: 'UTC+7',
+                    time: controller.wibTime.value,
+                    emoji: '🏙️',
+                    color: AppColors.primaryTeal,
+                  ),
+                ),
+              ),
               const SizedBox(width: 10),
-              Expanded(child: Obx(() => _ClockCard(
-                label: 'WITA',
-                sublabel: 'UTC+8',
-                time: controller.witaTime.value,
-                emoji: '🌴',
-                color: AppColors.primaryBlue,
-              ))),
+              Expanded(
+                child: Obx(
+                  () => _ClockCard(
+                    label: 'WITA',
+                    sublabel: 'UTC+8',
+                    time: controller.witaTime.value,
+                    emoji: '🌴',
+                    color: AppColors.primaryBlue,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(child: Obx(() => _ClockCard(
-                label: 'WIT',
-                sublabel: 'UTC+9',
-                time: controller.witTime.value,
-                emoji: '🦜',
-                color: Colors.orange.shade400,
-              ))),
+              Expanded(
+                child: Obx(
+                  () => _ClockCard(
+                    label: 'WIT',
+                    sublabel: 'UTC+9',
+                    time: controller.witTime.value,
+                    emoji: '🦜',
+                    color: Colors.orange.shade400,
+                  ),
+                ),
+              ),
               const SizedBox(width: 10),
-              Expanded(child: Obx(() => _ClockCard(
-                label: controller.londonLabel.value,
-                sublabel: 'UTC+0/+1',
-                time: controller.londonTime.value,
-                emoji: '🎡',
-                color: Colors.red.shade400,
-              ))),
+              Expanded(
+                child: Obx(
+                  () => _ClockCard(
+                    label: controller.londonLabel.value,
+                    sublabel: 'UTC+0/+1',
+                    time: controller.londonTime.value,
+                    emoji: '🎡',
+                    color: Colors.red.shade400,
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -154,68 +173,93 @@ class TimezoneView extends GetView<TimezoneController> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text('Dari zona waktu:', style: TextStyle(color: AppColors.textGrey, fontSize: 13)),
+            const Text(
+              'Dari zona waktu:',
+              style: TextStyle(color: AppColors.textGrey, fontSize: 13),
+            ),
             const SizedBox(height: 8),
-            Obx(() => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: controller.zones.map((zone) {
-                  final selected = controller.selectedSourceZone.value == zone;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: GestureDetector(
-                      onTap: () {
-                        controller.selectedSourceZone.value = zone;
-                        controller.convertTime();
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? const Color(0xFF6C63FF)
-                              : const Color(0xFFF0F4F8),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          zone,
-                          style: TextStyle(
-                            color: selected ? Colors.white : AppColors.textGrey,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
+            Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: controller.zones.map((zone) {
+                    final selected =
+                        controller.selectedSourceZone.value == zone;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: GestureDetector(
+                        onTap: () {
+                          controller.selectedSourceZone.value = zone;
+                          controller.convertTime();
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? const Color(0xFF6C63FF)
+                                : const Color(0xFFF0F4F8),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            zone,
+                            style: TextStyle(
+                              color: selected
+                                  ? Colors.white
+                                  : AppColors.textGrey,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
-            )),
+            ),
             const SizedBox(height: 16),
-            const Text('Pilih waktu:', style: TextStyle(color: AppColors.textGrey, fontSize: 13)),
+            const Text(
+              'Pilih waktu:',
+              style: TextStyle(color: AppColors.textGrey, fontSize: 13),
+            ),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () => controller.pickTime(context),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0F4F8),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF6C63FF).withOpacity(0.3)),
+                  border: Border.all(
+                    color: const Color(0xFF6C63FF).withOpacity(0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.access_time_rounded, color: Color(0xFF6C63FF), size: 20),
+                    const Icon(
+                      Icons.access_time_rounded,
+                      color: Color(0xFF6C63FF),
+                      size: 20,
+                    ),
                     const SizedBox(width: 10),
-                    Obx(() => Text(
-                      '${controller.inputHour.value.toString().padLeft(2, '0')}:${controller.inputMinute.value.toString().padLeft(2, '0')}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textDark,
+                    Obx(
+                      () => Text(
+                        '${controller.inputHour.value.toString().padLeft(2, '0')}:${controller.inputMinute.value.toString().padLeft(2, '0')}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDark,
+                        ),
                       ),
-                    )),
+                    ),
                     const Spacer(),
                     const Text(
                       'Tap untuk ganti',
@@ -237,14 +281,40 @@ class TimezoneView extends GetView<TimezoneController> {
               ),
             ),
             const SizedBox(height: 12),
-            Obx(() => Column(
-              children: [
-                _ResultRow(zone: 'WIB',    sublabel: 'UTC+7', time: controller.convertedWib.value,    color: const Color(0xFF2EC4B6), emoji: '🏙️'),
-                _ResultRow(zone: 'WITA',   sublabel: 'UTC+8', time: controller.convertedWita.value,   color: const Color(0xFF6C63FF), emoji: '🌴'),
-                _ResultRow(zone: 'WIT',    sublabel: 'UTC+9', time: controller.convertedWit.value,    color: const Color(0xFFF7931A), emoji: '🦜'),
-                _ResultRow(zone: controller.londonLabel.value, sublabel: 'UK', time: controller.convertedLondon.value, color: const Color(0xFFE53935), emoji: '🎡'),
-              ],
-            )),
+            Obx(
+              () => Column(
+                children: [
+                  _ResultRow(
+                    zone: 'WIB',
+                    sublabel: 'UTC+7',
+                    time: controller.convertedWib.value,
+                    color: const Color(0xFF2EC4B6),
+                    emoji: '🏙️',
+                  ),
+                  _ResultRow(
+                    zone: 'WITA',
+                    sublabel: 'UTC+8',
+                    time: controller.convertedWita.value,
+                    color: const Color(0xFF6C63FF),
+                    emoji: '🌴',
+                  ),
+                  _ResultRow(
+                    zone: 'WIT',
+                    sublabel: 'UTC+9',
+                    time: controller.convertedWit.value,
+                    color: const Color(0xFFF7931A),
+                    emoji: '🦜',
+                  ),
+                  _ResultRow(
+                    zone: controller.londonLabel.value,
+                    sublabel: 'UK',
+                    time: controller.convertedLondon.value,
+                    color: const Color(0xFFE53935),
+                    emoji: '🎡',
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -300,7 +370,10 @@ class _ClockCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 2),
-          Text(sublabel, style: const TextStyle(fontSize: 10, color: AppColors.textGrey)),
+          Text(
+            sublabel,
+            style: const TextStyle(fontSize: 10, color: AppColors.textGrey),
+          ),
           const SizedBox(height: 8),
           Text(
             time,
@@ -346,15 +419,30 @@ class _ResultRow extends StatelessWidget {
               color: color.withOpacity(0.12),
               shape: BoxShape.circle,
             ),
-            child: Center(child: Text(emoji, style: const TextStyle(fontSize: 16))),
+            child: Center(
+              child: Text(emoji, style: const TextStyle(fontSize: 16)),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(zone, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textDark)),
-                Text(sublabel, style: const TextStyle(fontSize: 11, color: AppColors.textGrey)),
+                Text(
+                  zone,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                Text(
+                  sublabel,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textGrey,
+                  ),
+                ),
               ],
             ),
           ),
