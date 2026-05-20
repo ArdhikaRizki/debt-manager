@@ -9,12 +9,13 @@ import '../../../core/utils/biometric_controller.dart';
 
 class ProfileController extends GetxController {
   // --- STATE UNTUK BIODATA ---
+  var userId = 0.obs;
   var username = "Loading...".obs;
   var email = "Loading...".obs;
-  var bio = "Tidak ada bio".obs;
-  
-  // --- STATE UNTUK FOTO PROFIL ---
-  var photoPath = "".obs; 
+  var photoPath = "".obs;
+  var isVerified = false.obs;
+  var isLoading = true.obs;
+  var errorMessage = "".obs; 
 
   // --- STATE UNTUK BIOMETRIK ---
   var isBiometricActive = false.obs;
@@ -32,20 +33,35 @@ class ProfileController extends GetxController {
   // --- MENGAMBIL DATA PROFILE ---
   Future<void> fetchUserProfile() async {
     final token = AuthStorage.getToken();
-    if (token == null) return;
+    if (token == null) {
+      errorMessage.value = 'Token tidak ditemukan';
+      isLoading.value = false;
+      return;
+    }
 
     try {
+      isLoading.value = true;
+      errorMessage.value = '';
+      
       final response = await _apiService.getMe(token);
       if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
-        final data = response.body['data'];
-        username.value = data['username'] ?? '';
-        email.value = data['email'] ?? '';
-        // Sesuaikan dengan field dari API jika ada bio atau avatar
-        // bio.value = data['bio'] ?? 'Tidak ada bio';
-        // photoPath.value = data['avatar'] ?? '';
+        final data = response.body['data'] as Map<String, dynamic>?;
+        
+        if (data != null) {
+          userId.value = int.tryParse(data['id'].toString()) ?? 0;
+          username.value = data['username'] ?? 'Pengguna';
+          email.value = data['email'] ?? 'Tidak ada email';
+          photoPath.value = data['photo_path'] ?? '';
+          isVerified.value = data['is_verified'] == true || data['is_verified'] == 1;
+        }
+      } else {
+        errorMessage.value = 'Gagal memuat profil';
       }
     } catch (e) {
       print("Error fetch profile: $e");
+      errorMessage.value = 'Terjadi kesalahan: $e';
+    } finally {
+      isLoading.value = false;
     }
   }
 

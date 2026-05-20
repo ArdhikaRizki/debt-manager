@@ -19,6 +19,8 @@ import '../modules/timezone/timezone_view.dart';
 import '../modules/welcome/welcome_view.dart';
 import '../modules/main_gate/main_gate_binding.dart';
 import '../modules/main_gate/main_gate_view.dart';
+import '../modules/feedback/feedback_binding.dart';
+import '../modules/feedback/feedback_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -83,6 +85,11 @@ class AppPages {
       name: AppRoutes.mainGate,
       page: () => const MainGateView(),
       binding: MainGateBinding(), // Pakai binding gabungan tadi
+    ),
+    GetPage(
+      name: AppRoutes.feedback,
+      page: () => const FeedbackView(),
+      binding: FeedbackBinding(),
     ),
   ];
 }

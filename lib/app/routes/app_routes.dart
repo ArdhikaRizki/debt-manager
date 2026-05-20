@@ -10,6 +10,7 @@ abstract class AppRoutes {
   static const groupDetail = '/group/detail';
   static const groupTransaction = '/group/transaction';
   static const profile = '/profile';
+  static const feedback = '/feedback';
   static const timezone = '/timezone';
   static const currency = '/currency';
 }

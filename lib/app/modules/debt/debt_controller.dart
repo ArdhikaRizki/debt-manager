@@ -8,6 +8,8 @@ import '../../data/services/auth_storage.dart';
 class DebtController extends GetxController {
   late final ApiService _api;
 
+  static const int maxDescriptionLength = 500;
+
   final myDebts = <DebtModel>[].obs;    // current user is debtor
   final owedToMe = <DebtModel>[].obs;   // current user is creditor
   final isLoading = false.obs;
@@ -43,13 +45,23 @@ class DebtController extends GetxController {
       return;
     }
 
+    // Validasi deskripsi
+    final descValidation = _validateDescription(description);
+    if (descValidation != null) {
+      Get.snackbar('Error', descValidation);
+      return;
+    }
+
     try {
+      // Sanitasi deskripsi
+      final sanitizedDesc = _sanitizeDescription(description);
+      
       // Format due_date sebagai YYYY-MM-DD
       final dueDateStr = '${dueDate.year}-${dueDate.month.toString().padLeft(2, '0')}-${dueDate.day.toString().padLeft(2, '0')}';
       
       final body = {
         'amount': amount,
-        'description': description,
+        'description': sanitizedDesc,
         'due_date': dueDateStr,
         'otherUsername': otherUsername,
       };
@@ -66,6 +78,47 @@ class DebtController extends GetxController {
     } catch (e) {
       Get.snackbar('Error', 'Kesalahan jaringan: $e');
     }
+  }
+
+  /// Validasi deskripsi - return error message jika ada masalah
+String? _validateDescription(String description) {
+  final trimmed = description.trim();
+
+  if (trimmed.isEmpty) return 'Deskripsi tidak boleh kosong';
+
+  if (trimmed.length > maxDescriptionLength) {
+    return 'Deskripsi maksimal $maxDescriptionLength karakter (saat ini: ${trimmed.length})';
+  }
+
+  // Hanya blokir SQL/XSS, quotes akan di-sanitasi
+  final sqlPattern = RegExp(
+    r'(drop\s+table|delete\s+from|insert\s+into|select\s+|update\s+|union\s+)',
+    caseSensitive: false,
+  );
+  final xssPattern = RegExp(
+    r'(script|onerror|onclick|onload|javascript)',
+    caseSensitive: false,
+  );
+
+  if (sqlPattern.hasMatch(trimmed) || xssPattern.hasMatch(trimmed)) {
+    return 'Deskripsi mengandung karakter tidak diperbolehkan';
+  }
+
+  return null;
+}
+
+  /// Sanitasi deskripsi
+  String _sanitizeDescription(String description) {
+    String sanitized = description.trim();
+    
+    // Ganti single quote dengan apostrophe yang aman
+    sanitized = sanitized.replaceAll("'", "'");
+    // Ganti double quote dengan safe double quote  
+    sanitized = sanitized.replaceAll('"', '"');
+    // Ganti backslash dengan forward slash
+    sanitized = sanitized.replaceAll('\\', '/');
+    
+    return sanitized;
   }
 
   Future<void> fetchDebts() async {

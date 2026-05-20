@@ -12,9 +12,30 @@ class ProfileView extends StatelessWidget {
     final ProfileController controller = Get.put(ProfileController());
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        if (controller.errorMessage.value.isNotEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(controller.errorMessage.value,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16, color: Colors.red),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return SingleChildScrollView(
+          child: Column(
+            children: [
             // --- HEADER & FOTO PROFIL ---
             Stack(
               clipBehavior: Clip.none,
@@ -28,14 +49,6 @@ class ProfileView extends StatelessWidget {
                     color: AppColors.primaryTeal,
                   ),
                 ),
-                // Positioned(
-                //   top: 50,
-                //   left: 20,
-                //   child: IconButton(
-                //     icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                //     onPressed: () => Get.back(),
-                //   ),
-                // ),
                 const Positioned(
                   top: 55,
                   child: Text("Profile",
@@ -50,7 +63,7 @@ class ProfileView extends StatelessWidget {
                     onTap: () => controller.pickAndUploadPhoto(),
                     child: Stack(
                       children: [
-                        Obx(() => Container(
+                        Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 4),
@@ -61,15 +74,14 @@ class ProfileView extends StatelessWidget {
                           child: CircleAvatar(
                             radius: 55,
                             backgroundColor: Colors.grey.shade200,
-                            // Jika photoPath kosong, pakai default icon. Jika ada, pakai gambar (Network/File)
-                            backgroundImage: controller.photoPath.value.isEmpty 
-                                ? null 
-                                : NetworkImage(controller.photoPath.value),
+                            backgroundImage: controller.photoPath.value.isNotEmpty 
+                                ? NetworkImage(controller.photoPath.value)
+                                : null,
                             child: controller.photoPath.value.isEmpty 
                                 ? const Icon(Icons.person, size: 50, color: Colors.grey) 
                                 : null,
                           ),
-                        )),
+                        ),
                         // Ikon Kamera Kecil di pojok foto
                         Positioned(
                           bottom: 0,
@@ -94,7 +106,7 @@ class ProfileView extends StatelessWidget {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textDark),
             )),
             const SizedBox(height: 5),
-            Obx(() => Text(controller.bio.value,
+            Obx(() => Text(controller.email.value,
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             )),
             
@@ -110,8 +122,13 @@ class ProfileView extends StatelessWidget {
                     padding: EdgeInsets.only(left: 10, bottom: 10),
                     child: Text("Biodata", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
                   ),
-                  _buildInfoItem(Icons.email_outlined, "Email", controller.email.value),
-                  _buildInfoItem(Icons.verified_user_outlined, "Status Akun", "Verified"), // Sesuai is_verified di database
+                  Obx(() => _buildInfoItem(Icons.email_outlined, "Email", controller.email.value)),
+                  Obx(() => _buildInfoItem(
+                    Icons.verified_user_outlined, 
+                    "Status Akun", 
+                    controller.isVerified.value ? "Terverifikasi" : "Belum Terverifikasi",
+                    statusColor: controller.isVerified.value ? Colors.green : Colors.orange,
+                  )),
                   
                   const SizedBox(height: 20),
                   const Padding(
@@ -145,7 +162,6 @@ class ProfileView extends StatelessWidget {
                     )),
                   ),
 
-                  _buildMenuItem(Icons.lock_outline, "Ubah Password", () {}),
                   const SizedBox(height: 20),
                   _buildMenuItem(Icons.logout, "Logout", () => controller.logout(), isLogout: true),
                 ],
@@ -153,13 +169,14 @@ class ProfileView extends StatelessWidget {
             ),
             const SizedBox(height: 40),
           ],
-        ),
-      ),
+        ));
+      }),
     );
+    
   }
 
   // Widget bantuan untuk Biodata (Hanya Info)
-  Widget _buildInfoItem(IconData icon, String title, String subtitle) {
+  Widget _buildInfoItem(IconData icon, String title, String subtitle, {Color? statusColor}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(
@@ -174,7 +191,13 @@ class ProfileView extends StatelessWidget {
           child: Icon(icon, color: AppColors.primaryTeal),
         ),
         title: Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        subtitle: Text(subtitle, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textDark)),
+        subtitle: Text(
+          subtitle, 
+          style: TextStyle(
+            fontWeight: FontWeight.w600, 
+            color: statusColor ?? AppColors.textDark,
+          ),
+        ),
       ),
     );
   }
