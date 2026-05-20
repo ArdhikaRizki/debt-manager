@@ -141,7 +141,7 @@ class BiometricController extends GetxController {
         colorText: Colors.white,
       );
 
-      Get.offAllNamed(AppRoutes.home);
+      Get.offAllNamed(AppRoutes.mainGate);
     }
   }
 
@@ -158,4 +158,4 @@ class BiometricController extends GetxController {
     await secureStorage.delete(key: _savedAuthToken);
     await secureStorage.delete(key: _savedUserData);
   }
-}
+}
