@@ -30,7 +30,7 @@ class FeedbackView extends GetView<FeedbackController> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
-                'Silakan masukkan saran dan kesan Anda untuk mata kuliah Teknologi Pemrograman Mobile (TPM). Data ini disimpan secara lokal.',
+                'Saran kesan masuk ke data lokal. Tuliskan uneg unegmu',
                 style: TextStyle(fontSize: 14, color: Colors.black87),
                 textAlign: TextAlign.center,
               ),
