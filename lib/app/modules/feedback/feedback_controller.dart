@@ -120,7 +120,22 @@ class FeedbackController extends GetxController {
       if (dataString != null) {
         final List<dynamic> decodedList = jsonDecode(dataString);
         final List<Map<String, dynamic>> data = decodedList
-            .map((e) => Map<String, dynamic>.from(e as Map))
+            .map((e) {
+              final map = Map<String, dynamic>.from(e as Map);
+              final createdAt = map['created_at'];
+
+              if (createdAt is String) {
+                final parsedDate = DateTime.tryParse(createdAt);
+                map['created_at'] = parsedDate?.millisecondsSinceEpoch ??
+                    DateTime.now().millisecondsSinceEpoch;
+              } else if (createdAt is! int) {
+                map['created_at'] = DateTime.now().millisecondsSinceEpoch;
+              }
+
+              map['saran'] = map['saran']?.toString() ?? '';
+              map['kesan'] = map['kesan']?.toString() ?? '';
+              return map;
+            })
             .toList();
         feedbacks.assignAll(data);
       } else {
@@ -178,7 +193,7 @@ class FeedbackController extends GetxController {
         'id': DateTime.now().millisecondsSinceEpoch,
         'saran': saran,
         'kesan': kesan,
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().millisecondsSinceEpoch,
       };
       
       // Tambahkan ke list (di awal agar terbaru di atas)

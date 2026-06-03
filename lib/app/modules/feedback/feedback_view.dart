@@ -221,9 +221,11 @@ class FeedbackView extends GetView<FeedbackController> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) {
                     final item = controller.feedbacks[index];
-                    final date = DateTime.fromMillisecondsSinceEpoch(
-                      item['created_at'] as int,
-                    );
+                    final createdAt = item['created_at'];
+                    final date = createdAt is int
+                        ? DateTime.fromMillisecondsSinceEpoch(createdAt)
+                        : DateTime.tryParse(createdAt?.toString() ?? '') ??
+                            DateTime.now();
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       shape: RoundedRectangleBorder(
@@ -251,13 +253,13 @@ class FeedbackView extends GetView<FeedbackController> {
                                 ),
                               ],
                             ),
-                            Text(item['saran']),
+                            Text(item['saran']?.toString() ?? ''),
                             const SizedBox(height: 8),
                             const Text(
                               'Kesan:',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            Text(item['kesan']),
+                            Text(item['kesan']?.toString() ?? ''),
                           ],
                         ),
                       ),

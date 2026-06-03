@@ -48,6 +48,22 @@ class CurrencyView extends GetView<CurrencyController> {
         children: [
           Row(
             children: [
+              GestureDetector(
+                onTap: () => Get.back(),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
               const Expanded(
                 child: Text(
                   ' Konversi Mata Uang',
