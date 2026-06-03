@@ -197,7 +197,69 @@ class GroupTransactionController extends GetxController {
     }
   }
 
+  // ─── Settle Debt Chain ─────────────────────────────────
+  // Membuat settlement request untuk setiap transaksi aktif antara fromId → toId
+  // agar tidak membuat hutang baru (yang menyebabkan duplikasi angka)
+  Future<void> settleDebtChain(DebtChain chain) async {
+    final token = AuthStorage.getToken();
+    if (token == null) return;
+
+    // Cari semua transaksi aktif (belum lunas & belum ada pending) antara fromId → toId
+    final activeTxs = transactions.where((tx) {
+      final isApproved = (tx.settlementRequests ?? []).any((r) => r.status == 'approved');
+      final hasPending  = (tx.settlementRequests ?? []).any((r) => r.status == 'pending');
+      return !isApproved && !hasPending &&
+             tx.fromUserId == chain.fromId &&
+             tx.toUserId  == chain.toId;
+    }).toList();
+
+    if (activeTxs.isEmpty) {
+      Get.snackbar(
+        'Info',
+        'Tidak ada transaksi aktif yang bisa diselesaikan untuk chain ini',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(12),
+      );
+      return;
+    }
+
+    int successCount = 0;
+    for (final tx in activeTxs) {
+      try {
+        final res = await _api.createGroupSettlement(tx.id, token);
+        if (res.statusCode == 200 || res.statusCode == 201) successCount++;
+      } catch (_) {
+        // lanjut ke transaksi berikutnya
+      }
+    }
+
+    await fetchTransactions();
+
+    if (successCount > 0) {
+      Get.snackbar(
+        'Berhasil',
+        'Pengajuan pelunasan terkirim ($successCount transaksi)',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF4CAF50),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(12),
+      );
+    } else {
+      Get.snackbar(
+        'Gagal',
+        'Gagal mengajukan pelunasan. Coba lagi.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFF44336),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(12),
+      );
+    }
+  }
+
   // ─── Delete Transaction ─────────────────────────────────
+
   Future<void> deleteTransaction(int txId) async {
     final token = AuthStorage.getToken();
     if (token == null) return;

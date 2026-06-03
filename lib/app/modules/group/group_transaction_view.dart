@@ -981,7 +981,7 @@ class _SummaryTab extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(vertical: 10),
                           ),
                           child: Text(
-                              'Bayar langsung ke $to sebesar ${_fmtCurrency(chain.amount)}',
+                              'Ajukan Pelunasan ke $to',
                               style: const TextStyle(fontSize: 12)),
                         ),
                       ),
@@ -1080,11 +1080,7 @@ class _SummaryTab extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () async {
                   Get.back();
-                  await controller.createTransaction(
-                    toUsername: toName,
-                    amount: chain.amount,
-                    description: descCtrl.text.trim(),
-                  );
+                  await controller.settleDebtChain(chain);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryTeal,
