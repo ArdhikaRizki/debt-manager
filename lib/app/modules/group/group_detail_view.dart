@@ -12,291 +12,299 @@ class GroupDetailView extends GetView<GroupDetailController> {
 
   @override
   Widget build(BuildContext context) {
+    const Color darkGreenText = Color(0xFF0F3D3E);
+    const Color lightGreenBg = Color(0xFFF2FBF1);
+    const Color buttonBg = Color(0xFFE2F3E4);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F8),
+      backgroundColor: AppColors.primaryTeal,
       appBar: AppBar(
         backgroundColor: AppColors.primaryTeal,
-        foregroundColor: Colors.white,
-        title: const Text('Detail Grup',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        elevation: 0,
+        centerTitle: true,
+        title: const Text('Detail Group',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.white)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           onPressed: () => Get.back(),
         ),
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(
-              child:
-                  CircularProgressIndicator(color: AppColors.primaryTeal));
+          return Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: lightGreenBg,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+            ),
+            child: const Center(
+                child: CircularProgressIndicator(color: AppColors.primaryTeal)),
+          );
         }
         if (controller.errorMsg.value.isNotEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 60, color: Colors.red),
-                const SizedBox(height: 12),
-                Text(controller.errorMsg.value,
-                    style: const TextStyle(color: AppColors.textGrey)),
-              ],
+          return Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: lightGreenBg,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                  const SizedBox(height: 12),
+                  Text(controller.errorMsg.value,
+                      style: const TextStyle(color: AppColors.textGrey)),
+                ],
+              ),
             ),
           );
         }
 
         final group = controller.group.value;
         if (group == null) {
-          return const Center(child: Text('Data tidak ditemukan'));
+          return Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: lightGreenBg,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+            ),
+            child: const Center(child: Text('Data tidak ditemukan')),
+          );
         }
 
         final isCreator = group.creatorId == controller.currentUserId;
         final isAdminUser = group.members?.any((m) => m.userId == controller.currentUserId && m.role == 'admin') ?? false;
         final canManage = isCreator || isAdminUser;
 
-        return RefreshIndicator(
-          color: AppColors.primaryTeal,
-          onRefresh: () => controller.fetchDetail(group.id),
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── HEADER CARD ──────────────────────────
-                Card(
-                  elevation: 3,
-                  shadowColor: Colors.black12,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
+        return Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            color: lightGreenBg,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: RefreshIndicator(
+                  color: AppColors.primaryTeal,
+                  onRefresh: () => controller.fetchDetail(group.id),
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                AppColors.primaryTeal,
-                                AppColors.primaryBlue
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Center(
-                            child: Text(
-                              group.name.isNotEmpty
-                                  ? group.name[0].toUpperCase()
-                                  : 'G',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 32,
+                        // ── HEADER CARD ──────────────────────────
+                        Row(
+                          children: [
+                            Container(
+                              width: 90,
+                              height: 90,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF00ACC1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  group.name.isNotEmpty
+                                      ? group.name[0].toUpperCase()
+                                      : 'G',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 40,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          group.name,
-                          style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textDark),
-                          textAlign: TextAlign.center,
-                        ),
-                        if (group.description != null &&
-                            group.description!.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            group.description!,
-                            style: const TextStyle(
-                                fontSize: 14, color: AppColors.textGrey),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                        const SizedBox(height: 16),
-                        const Divider(),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildStatItem(
-                                Icons.people_outline,
-                                '${group.members?.length ?? 0} Anggota',
-                                'Total Anggota'),
-                            _buildStatItem(
-                                Icons.calendar_today_outlined,
-                                _formatDate(group.createdAt),
-                                'Tanggal Dibuat'),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: Text(
+                                group.name,
+                                style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: darkGreenText),
+                              ),
+                            ),
                           ],
                         ),
+                        const SizedBox(height: 24),
+                        
+                        Padding(
+                          padding: const EdgeInsets.only(left: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              RichText(
+                                text: TextSpan(
+                                  style: const TextStyle(color: darkGreenText, fontSize: 16),
+                                  children: [
+                                    TextSpan(text: '${group.members?.length ?? 0} ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    const TextSpan(text: 'Anggota'),
+                                  ]
+                                )
+                              ),
+                              const SizedBox(height: 12),
+                              const Text('Group Created At:', style: TextStyle(fontSize: 12, color: darkGreenText)),
+                              const SizedBox(height: 4),
+                              Text(_formatDate(group.createdAt), style: const TextStyle(fontSize: 12, color: darkGreenText)),
+                            ]
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 40),
+                        
+                        // ── MEMBER LIST ──────────────────────────
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Anggota Grup',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: darkGreenText),
+                            ),
+                            if (canManage)
+                              IconButton(
+                                onPressed: () => _showAddMemberSheet(context),
+                                icon: const Icon(Icons.add, size: 28, color: darkGreenText),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        if (group.members == null || group.members!.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: Text('Belum ada anggota',
+                                  style: TextStyle(color: AppColors.textGrey)),
+                            ),
+                          )
+                        else
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: group.members!.length,
+                            itemBuilder: (context, index) {
+                              final member = group.members![index];
+                              // isMe: cek apakah userId member == currentUser
+                              final isMe = member.userId == controller.currentUserId;
+                              // isAdmin: cek role dari member
+                              final isAdmin = member.role == 'admin';
+                              final memberUsername = member.user?.username ?? 'User #${member.userId}';
+                              
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: Row(
+                                  children: [
+                                    MemberAvatar(
+                                      userId: member.userId,
+                                      photoPath: member.user?.photoPath,
+                                      radius: 24,
+                                      fallbackLabel: memberUsername,
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Row(
+                                        children: [
+                                          Text(memberUsername,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                  color: darkGreenText)),
+                                          if (isMe) ...[
+                                            const SizedBox(width: 8),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                  horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                  color: AppColors.primaryTeal,
+                                                  borderRadius:
+                                                      BorderRadius.circular(4)),
+                                              child: const Text('Saya',
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.bold)),
+                                            ),
+                                          ],
+                                          if (isAdmin) ...[
+                                            const SizedBox(width: 8),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                  horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                  color: Colors.amber.shade600,
+                                                  borderRadius:
+                                                      BorderRadius.circular(4)),
+                                              child: const Text('Admin',
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.bold)),
+                                            ),
+                                          ]
+                                        ],
+                                      ),
+                                    ),
+                                    if (canManage && !isMe)
+                                      IconButton(
+                                        icon: const Icon(
+                                            Icons.person_remove_rounded,
+                                            color: Colors.redAccent,
+                                            size: 20),
+                                        onPressed: () =>
+                                            _confirmRemoveMember(context, member),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                      ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                // ── TOMBOL LIHAT TRANSAKSI ──
-                SizedBox(
+              ),
+              // ── TOMBOL LIHAT TRANSAKSI ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                child: SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton.icon(
+                  child: ElevatedButton(
                     onPressed: () => Get.toNamed(
                       AppRoutes.groupTransaction,
                       arguments: group,
                     ),
-                    icon: const Icon(Icons.receipt_long_outlined),
-                    label: const Text('Lihat Transaksi & Hutang Grup'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      foregroundColor: Colors.white,
+                      backgroundColor: buttonBg,
+                      foregroundColor: darkGreenText,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                          borderRadius: BorderRadius.circular(24)),
+                      padding: const EdgeInsets.symmetric(vertical: 18),
                     ),
+                    child: const Text('Lihat transaksi & hutang grup',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
-                const SizedBox(height: 28),
-
-                // ── MEMBER LIST ──────────────────────────
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Anggota Grup',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textDark),
-                    ),
-                    if (canManage)
-                      TextButton.icon(
-                        onPressed: () => _showAddMemberSheet(context),
-                        icon: const Icon(Icons.person_add_alt_1_rounded,
-                            size: 18, color: AppColors.primaryTeal),
-                        label: const Text('Tambah',
-                            style: TextStyle(
-                                color: AppColors.primaryTeal,
-                                fontWeight: FontWeight.bold)),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (group.members == null || group.members!.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Center(
-                      child: Text('Belum ada anggota',
-                          style: TextStyle(color: AppColors.textGrey)),
-                    ),
-                  )
-                else
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: group.members!.length,
-                    itemBuilder: (context, index) {
-                      final member = group.members![index];
-                      // isMe: cek apakah userId member == currentUser
-                      final isMe = member.userId == controller.currentUserId;
-                      // isAdmin: cek role dari member
-                      final isAdmin = member.role == 'admin';
-                      final memberUsername = member.user?.username ?? 'User #${member.userId}';
-                      final memberEmail = member.user?.email ?? '';
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        elevation: 1,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        child: ListTile(
-                          leading: MemberAvatar(
-                            userId: member.userId,
-                            photoPath: member.user?.photoPath,
-                            radius: 22,
-                            fallbackLabel: memberUsername,
-                          ),
-                          title: Row(
-                            children: [
-                              Text(memberUsername,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w600)),
-                              if (isMe) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                      color: AppColors.primaryTeal,
-                                      borderRadius:
-                                          BorderRadius.circular(4)),
-                                  child: const Text('Saya',
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold)),
-                                ),
-                              ],
-                              if (isAdmin) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                      color: Colors.amber.shade600,
-                                      borderRadius:
-                                          BorderRadius.circular(4)),
-                                  child: const Text('Admin',
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold)),
-                                ),
-                              ]
-                            ],
-                          ),
-                          subtitle: memberEmail.isNotEmpty
-                              ? Text(memberEmail,
-                                  style: const TextStyle(fontSize: 12))
-                              : null,
-                          trailing: (canManage && !isMe)
-                              ? IconButton(
-                                  icon: const Icon(
-                                      Icons.person_remove_rounded,
-                                      color: Colors.redAccent),
-                                  onPressed: () =>
-                                      _confirmRemoveMember(context, member),
-                                )
-                              : null,
-                        ),
-                      );
-                    },
-                  ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       }),
     );
   }
 
-  Widget _buildStatItem(IconData icon, String value, String label) {
-    return Column(
-      children: [
-        Icon(icon, color: AppColors.textGrey, size: 22),
-        const SizedBox(height: 6),
-        Text(value,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: AppColors.textDark)),
-        const SizedBox(height: 2),
-        Text(label,
-            style: const TextStyle(fontSize: 11, color: AppColors.textGrey)),
-      ],
-    );
-  }
 
   void _showAddMemberSheet(BuildContext context) {
     final usernameCtrl = TextEditingController();
