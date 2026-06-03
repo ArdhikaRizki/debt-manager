@@ -10,10 +10,12 @@ class ApiService extends GetConnect {
     httpClient.baseUrl = _baseUrl;
     httpClient.timeout = const Duration(seconds: 10);
 
-    // Default headers
+    // Default headers — Content-Type TIDAK diset di sini.
+    // GetConnect otomatis set:
+    //   • application/json         → untuk body Map/JSON
+    //   • multipart/form-data      → untuk FormData (upload file)
     httpClient.addRequestModifier<dynamic>((request) {
       request.headers['Accept'] = 'application/json';
-      request.headers['Content-Type'] = 'application/json';
       request.headers['ngrok-skip-browser-warning'] = 'true';
       return request;
     });
@@ -61,7 +63,6 @@ class ApiService extends GetConnect {
   }
 
   // ─── USERS ─────────────────────────────────────────────
-
   Future<Response<dynamic>> getMe(String token) {
     return get('/users/me', headers: _auth(token));
   }
@@ -69,6 +70,29 @@ class ApiService extends GetConnect {
   Future<Response<dynamic>> updateMe(
       Map<String, dynamic> body, String token) {
     return patch('/users/me', body, headers: _auth(token));
+  }
+
+  /// Upload foto profil — multipart/form-data, field name: "avatar"
+  Future<Response<dynamic>> uploadAvatar(String filePath, String token) {
+    // Deteksi MIME type dari ekstensi file
+    final ext = filePath.split('.').last.toLowerCase();
+    final mimeType = switch (ext) {
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'png'           => 'image/png',
+      'webp'          => 'image/webp',
+      _               => 'image/jpeg', // fallback
+    };
+
+    final form = FormData({
+      'avatar': MultipartFile(filePath,
+          filename: 'avatar.$ext',
+          contentType: mimeType),
+    });
+    return post(
+      '/users/me/avatar',
+      form,
+      headers: _auth(token),
+    );
   }
 
   /// Cari user by username (untuk tambah debt/group member)
@@ -155,7 +179,6 @@ class ApiService extends GetConnect {
   }
 
   // ─── GROUPS ────────────────────────────────────────────
-
   Future<Response<dynamic>> getGroups(String token) {
     return get('/groups', headers: _auth(token));
   }
@@ -250,4 +273,10 @@ class ApiService extends GetConnect {
   // ─── HELPER ────────────────────────────────────────────
   Map<String, String> _auth(String token) =>
       {'Authorization': 'Bearer $token'};
+
+  /// Bangun URL proxy avatar untuk userId tertentu (bisa dipakai di mana saja)
+  static String buildAvatarProxyUrl(int userId, {int version = 0}) {
+    final baseUrl = dotenv.env['API_URL'] ?? 'http://192.168.1.18:5000/api';
+    return '$baseUrl/users/$userId/avatar-proxy?v=$version';
+  }
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,17 @@ import 'app/data/services/local_db_service.dart';
 import 'app/data/services/ai_receipt_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+/// Bypass SSL handshake untuk debug/demo mode.
+/// Flutter dart:io SSL engine lebih ketat dari browser Chrome.
+/// badCertificateCallback hanya handle cert validation — bukan TLS protocol error.
+class _DevHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (cert, host, port) => true; // bypass semua SSL
+  }
+}
+
 // Handler untuk background message HARUS berupa top-level function
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -23,6 +35,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 void main() async {
+  // Bypass SSL handshake untuk domain R2 (dart:io lebih ketat dari browser)
+  HttpOverrides.global = _DevHttpOverrides();
+
   WidgetsFlutterBinding.ensureInitialized();
   
   // Load environment variables dari file .env

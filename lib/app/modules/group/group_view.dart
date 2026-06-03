@@ -139,6 +139,7 @@ class GroupView extends GetView<GroupController> {
         );
       }),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-group',
         onPressed: () => _showCreateGroupSheet(context),
         backgroundColor: AppColors.primaryTeal,
         icon: const Icon(Icons.add, color: Colors.white),

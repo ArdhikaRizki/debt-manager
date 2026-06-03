@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/member_avatar.dart';
 import '../../data/models/group_model.dart';
 import '../../routes/app_routes.dart';
 import 'group_detail_controller.dart';
@@ -210,10 +211,11 @@ class GroupDetailView extends GetView<GroupDetailController> {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                         child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: AppColors.primaryTeal.withOpacity(0.1),
-                            child: const Icon(Icons.person,
-                                color: AppColors.primaryTeal),
+                          leading: MemberAvatar(
+                            userId: member.userId,
+                            photoPath: member.user?.photoPath,
+                            radius: 22,
+                            fallbackLabel: memberUsername,
                           ),
                           title: Row(
                             children: [

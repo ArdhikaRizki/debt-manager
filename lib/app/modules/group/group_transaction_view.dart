@@ -71,6 +71,7 @@ class GroupTransactionView extends GetView<GroupTransactionController> {
           ]);
         }),
         floatingActionButton: FloatingActionButton.extended(
+          heroTag: 'fab-group-transaction',
           onPressed: () => _showCreateSheet(context),
           backgroundColor: AppColors.primaryTeal,
           icon: const Icon(Icons.add, color: Colors.white),
@@ -927,13 +928,12 @@ class _SummaryTab extends StatelessWidget {
               border: Border.all(color: Colors.amber.shade200),
             ),
             child: const Text(
-              'Hutang di bawah ini bisa diselesaikan langsung tanpa perantara.',
+              'Cara paling efisien untuk menyelesaikan semua hutang. Bayar langsung tanpa perantara.',
               style: TextStyle(fontSize: 12, color: Color(0xFF78350F)),
             ),
           ),
           ...chains.map((chain) {
             final from = controller.usernameOf(chain.fromId);
-            final via = controller.usernameOf(chain.middleId);
             final to = controller.usernameOf(chain.toId);
             final isMyChain = chain.fromId == myId;
             return Card(
@@ -949,20 +949,14 @@ class _SummaryTab extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Baris chain: A → (via B) → C
+                    // Baris chain: A → B (langsung)
                     Row(children: [
                       _chainNode(from, isMyChain ? Colors.red.shade600 : AppColors.textDark),
-                      const SizedBox(width: 6),
-                      Column(children: [
-                        const Icon(Icons.arrow_forward_rounded,
-                            size: 14, color: AppColors.textGrey),
-                        Text('via $via',
-                            style: const TextStyle(
-                                fontSize: 10, color: AppColors.textGrey)),
-                        const Icon(Icons.arrow_forward_rounded,
-                            size: 14, color: AppColors.textGrey),
-                      ]),
-                      const SizedBox(width: 6),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Icon(Icons.arrow_forward_rounded,
+                            size: 18, color: AppColors.textGrey),
+                      ),
                       _chainNode(to, Colors.green.shade600),
                       const Spacer(),
                       Text(_fmtCurrency(chain.amount),
@@ -1004,7 +998,7 @@ class _SummaryTab extends StatelessWidget {
 
   void _showChainPaySheet(BuildContext context, DebtChain chain, String toName) {
     final descCtrl = TextEditingController(
-        text: 'Pembayaran rantai hutang via ${controller.usernameOf(chain.middleId)}');
+        text: 'Pembayaran langsung ke $toName');
     Get.bottomSheet(
       Container(
         decoration: const BoxDecoration(

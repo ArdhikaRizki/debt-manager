@@ -54,6 +54,7 @@ class DebtView extends GetView<DebtController> {
                 );
               }),
               floatingActionButton: FloatingActionButton.extended(
+                heroTag: 'fab-debt',
                 onPressed: () => _showCreateDebtSheet(context),
                 backgroundColor: AppColors.primaryTeal,
                 icon: const Icon(Icons.add, color: Colors.white),

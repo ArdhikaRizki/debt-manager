@@ -1,11 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../data/services/local_db_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../data/services/auth_storage.dart';
 
 class FeedbackController extends GetxController {
   static const int maxCharsPerField = 1000;
-
-  final LocalDbService _localDbService = Get.find<LocalDbService>();
 
   final saranController = TextEditingController();
   final kesanController = TextEditingController();
@@ -104,11 +104,30 @@ class FeedbackController extends GetxController {
     return suspiciousPatterns.any((pattern) => lowerText.contains(pattern));
   }
 
+  String _getFeedbackKey() {
+    final user = AuthStorage.getUser();
+    final userId = user?['id']?.toString() ?? 'anonymous';
+    return 'feedbacks_$userId';
+  }
+
   Future<void> loadFeedbacks() async {
     isLoading.value = true;
     try {
-      final data = await _localDbService.getFeedbacks();
-      feedbacks.assignAll(data);
+      final prefs = await SharedPreferences.getInstance();
+      final key = _getFeedbackKey();
+      final String? dataString = prefs.getString(key);
+      
+      if (dataString != null) {
+        final List<dynamic> decodedList = jsonDecode(dataString);
+        final List<Map<String, dynamic>> data = decodedList
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
+        feedbacks.assignAll(data);
+      } else {
+        feedbacks.clear();
+      }
+    } catch (e) {
+      debugPrint('Error loading feedbacks: $e');
     } finally {
       isLoading.value = false;
     }
@@ -152,7 +171,20 @@ class FeedbackController extends GetxController {
 
     isLoading.value = true;
     try {
-      final success = await _localDbService.saveFeedback(saran, kesan);
+      final prefs = await SharedPreferences.getInstance();
+      final key = _getFeedbackKey();
+      
+      final newFeedback = {
+        'id': DateTime.now().millisecondsSinceEpoch,
+        'saran': saran,
+        'kesan': kesan,
+        'created_at': DateTime.now().toIso8601String(),
+      };
+      
+      // Tambahkan ke list (di awal agar terbaru di atas)
+      feedbacks.insert(0, newFeedback);
+      
+      final success = await prefs.setString(key, jsonEncode(feedbacks));
       
       if (success) {
         saranController.clear();
@@ -162,16 +194,15 @@ class FeedbackController extends GetxController {
         saranCharCount.value = 0;
         kesanCharCount.value = 0;
         
-        Get.snackbar('Sukses', 'Saran dan Kesan berhasil disimpan ke DB lokal',
+        Get.snackbar('Sukses', 'Saran dan Kesan berhasil disimpan',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.green.withOpacity(0.8),
           colorText: Colors.white,
           duration: const Duration(seconds: 3),
         );
-        
-        // Refresh list
-        await loadFeedbacks();
       } else {
+        // Rollback jika gagal
+        feedbacks.removeAt(0);
         Get.snackbar('Error', 'Gagal menyimpan feedback. Coba lagi.', 
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red.withOpacity(0.8),

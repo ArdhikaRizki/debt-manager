@@ -349,46 +349,54 @@ class GroupTransactionController extends GetxController {
     netBalances.value = balances;
   }
 
-  // Menghitung debt chain: siapa bisa dibayar oleh siapa secara tidak langsung
-  // Contoh: A hutang B 100rb, B hutang C 50rb → A bisa langsung bayar C 50rb
   void _computeDebtChains() {
+    // Algoritma greedy berbasis saldo bersih:
+    // Semua debitor (saldo negatif) langsung bayar ke kreditor (saldo positif)
+    // tanpa perantara (via). Chain hanya muncul jika ada >1 kreditor.
     final chains = <DebtChain>[];
 
-    // Buat mutable map borrow (berhutang dari) dan lend (menghutangi ke)
-    // Gunakan algoritma penyederhanaan hutang (debt simplification)
-    final debts = <int, Map<int, double>>{};
+    // Buat salinan saldo yang bisa dimodifikasi
+    final debtors = <int, double>{}; // userId -> jumlah yang harus dibayar
+    final creditors = <int, double>{}; // userId -> jumlah yang akan diterima
 
-    for (final tx in transactions) {
-      // Skip transaksi yang sudah lunas (approved)
-      final isApproved = (tx.settlementRequests ?? []).any((r) => r.status == 'approved');
-      if (isApproved) continue;
-
-      debts[tx.fromUserId] ??= {};
-      debts[tx.fromUserId]![tx.toUserId] =
-          (debts[tx.fromUserId]![tx.toUserId] ?? 0) + tx.amount;
-    }
-
-    // Sederhanakan: jika A berhutang B dan B berhutang C,
-    // maka A bisa bayar langsung ke C
-    debts.forEach((fromId, toMap) {
-      toMap.forEach((toId, amount) {
-        // Cek apakah toId juga berhutang ke orang lain (chain)
-        if (debts.containsKey(toId)) {
-          debts[toId]!.forEach((nextId, nextAmount) {
-            if (nextId != fromId) {
-              // A bisa bayar ke nextId sebesar min(amount, nextAmount)
-              final transferable = amount < nextAmount ? amount : nextAmount;
-              chains.add(DebtChain(
-                fromId: fromId,
-                middleId: toId,
-                toId: nextId,
-                amount: transferable,
-              ));
-            }
-          });
-        }
-      });
+    netBalances.forEach((userId, balance) {
+      if (balance < -0.01) {
+        debtors[userId] = -balance; // simpan sebagai positif
+      } else if (balance > 0.01) {
+        creditors[userId] = balance;
+      }
     });
+
+    // Greedy matching: setiap debitor bayar ke kreditor satu per satu
+    final debtorList = debtors.keys.toList();
+    final creditorList = creditors.keys.toList();
+
+    int ci = 0;
+    int di = 0;
+
+    while (di < debtorList.length && ci < creditorList.length) {
+      final fromId = debtorList[di];
+      final toId = creditorList[ci];
+
+      final owes = debtors[fromId]!;
+      final receives = creditors[toId]!;
+
+      final transfer = owes < receives ? owes : receives;
+
+      if (transfer > 0.01) {
+        chains.add(DebtChain(
+          fromId: fromId,
+          toId: toId,
+          amount: transfer,
+        ));
+      }
+
+      debtors[fromId] = owes - transfer;
+      creditors[toId] = receives - transfer;
+
+      if (debtors[fromId]! <= 0.01) di++;
+      if (creditors[toId]! <= 0.01) ci++;
+    }
 
     debtChains.value = chains;
   }
@@ -407,15 +415,14 @@ class GroupTransactionController extends GetxController {
 }
 
 // ─── Data class untuk debt chain (public) ────────────────
+// Pembayaran langsung: fromId bayar toId sejumlah amount (tanpa perantara)
 class DebtChain {
   final int fromId;
-  final int middleId;
   final int toId;
   final double amount;
 
   const DebtChain({
     required this.fromId,
-    required this.middleId,
     required this.toId,
     required this.amount,
   });

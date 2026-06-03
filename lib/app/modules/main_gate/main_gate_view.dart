@@ -5,12 +5,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../home/home_view.dart';
 import '../debt/debt_view.dart';
 import '../group/group_view.dart';
-import '../timezone/timezone_view.dart';
-import '../currency/currency_view.dart';
-import '../feedback/feedback_view.dart';
 import '../profile/profile_view.dart';
 import 'main_gate_controller.dart';
-// import view lainnya (group, timezone, currency, profile)
+// import view lainnya (group, profile)
 
 class MainGateView extends GetView<MainGateController> {
   const MainGateView({super.key});
@@ -22,10 +19,7 @@ class MainGateView extends GetView<MainGateController> {
       const HomeView(),
       const DebtView(),
       const GroupView(), 
-      const TimezoneView(), // Placeholder, ganti dengan view sebenarnya
-      const CurrencyView(), // Placeholder, ganti dengan view sebenarnya
-      const ProfileView(), // Placeholder, ganti dengan view sebenarnya
-      const FeedbackView(), // Saran dan Kesan TPM
+      const ProfileView(), // Profile
     ];
 
     return Scaffold(
@@ -49,10 +43,7 @@ class MainGateView extends GetView<MainGateController> {
           BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), label: 'Hutang'),
           BottomNavigationBarItem(icon: Icon(Icons.group_outlined), label: 'Grup'),
-          BottomNavigationBarItem(icon: Icon(Icons.access_time_rounded), label: 'Waktu'),
-          BottomNavigationBarItem(icon: Icon(Icons.currency_exchange_rounded), label: 'Kurs'),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline_rounded), label: 'Profil'),
-          BottomNavigationBarItem(icon: Icon(Icons.feedback_outlined), label: 'Saran TPM'),
         ],
       )),
     );

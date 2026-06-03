@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../routes/app_routes.dart';
 import 'profile_controller.dart';
 
 class ProfileView extends StatelessWidget {
@@ -60,8 +62,12 @@ class ProfileView extends StatelessWidget {
                 Positioned(
                   bottom: -50,
                   child: GestureDetector(
-                    onTap: () => controller.pickAndUploadPhoto(),
-                    child: Stack(
+                    onTap: () {
+                      if (!controller.isUploading.value) {
+                        controller.pickAndUploadPhoto();
+                      }
+                    },
+                    child: Obx(() => Stack(
                       children: [
                         Container(
                           decoration: BoxDecoration(
@@ -74,26 +80,80 @@ class ProfileView extends StatelessWidget {
                           child: CircleAvatar(
                             radius: 55,
                             backgroundColor: Colors.grey.shade200,
-                            backgroundImage: controller.photoPath.value.isNotEmpty 
-                                ? NetworkImage(controller.photoPath.value)
-                                : null,
-                            child: controller.photoPath.value.isEmpty 
-                                ? const Icon(Icons.person, size: 50, color: Colors.grey) 
-                                : null,
+                            child: controller.localPhotoPath.value.isNotEmpty
+                                ? ClipOval(
+                                    child: Image.file(
+                                      File(controller.localPhotoPath.value),
+                                      width: 110,
+                                      height: 110,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Icon(
+                                        Icons.person,
+                                        size: 50,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                    ),
+                                  )
+                                : controller.photoPath.value.isNotEmpty
+                                    ? ClipOval(
+                                        child: Image.network(
+                                          controller.getProxyAvatarUrl(),
+                                          width: 110,
+                                          height: 110,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => Icon(
+                                            Icons.person,
+                                            size: 50,
+                                            color: Colors.grey.shade400,
+                                          ),
+                                          loadingBuilder: (_, child, progress) {
+                                            if (progress == null) return child;
+                                            return Center(
+                                              child: CircularProgressIndicator(
+                                                value: progress.expectedTotalBytes != null
+                                                    ? progress.cumulativeBytesLoaded /
+                                                        progress.expectedTotalBytes!
+                                                    : null,
+                                                strokeWidth: 2,
+                                                color: AppColors.primaryTeal,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      )
+                                    : Icon(Icons.person, size: 50, color: Colors.grey.shade400),
                           ),
+
                         ),
-                        // Ikon Kamera Kecil di pojok foto
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(color: AppColors.primaryTeal, shape: BoxShape.circle),
-                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
+                        // Overlay loading saat upload
+                        if (controller.isUploading.value)
+                          Positioned.fill(
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0x88000000),
+                              ),
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              ),
+                            ),
                           ),
-                        )
+                        // Ikon Kamera Kecil di pojok foto
+                        if (!controller.isUploading.value)
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(color: AppColors.primaryTeal, shape: BoxShape.circle),
+                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
+                            ),
+                          ),
                       ],
-                    ),
+                    )),
                   ),
                 ),
               ],
@@ -129,6 +189,15 @@ class ProfileView extends StatelessWidget {
                     controller.isVerified.value ? "Terverifikasi" : "Belum Terverifikasi",
                     statusColor: controller.isVerified.value ? Colors.green : Colors.orange,
                   )),
+                  
+                  const SizedBox(height: 20),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 10, bottom: 10),
+                    child: Text("Fitur", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                  ),
+                  _buildMenuItem(Icons.access_time_rounded, "Waktu", () => Get.toNamed(AppRoutes.timezone)),
+                  _buildMenuItem(Icons.currency_exchange_rounded, "Kurs", () => Get.toNamed(AppRoutes.currency)),
+                  _buildMenuItem(Icons.feedback_outlined, "Saran TPM", () => Get.toNamed(AppRoutes.feedback)),
                   
                   const SizedBox(height: 20),
                   const Padding(
