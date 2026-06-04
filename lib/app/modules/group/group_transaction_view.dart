@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -297,9 +298,11 @@ class GroupTransactionView extends GetView<GroupTransactionController> {
                   label: 'Jumlah (Rp)',
                   hint: '0',
                   keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Wajib diisi';
                     if (double.tryParse(v) == null) return 'Masukkan angka';
+                    if (v.length > 12) return 'Maks. 12 digit';
                     return null;
                   },
                 ),
@@ -369,6 +372,7 @@ class GroupTransactionView extends GetView<GroupTransactionController> {
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
     Widget? suffixIcon,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,6 +387,7 @@ class GroupTransactionView extends GetView<GroupTransactionController> {
           controller: controller,
           keyboardType: keyboardType,
           validator: validator,
+          inputFormatters: inputFormatters,
           decoration: InputDecoration(
             hintText: hint,
             suffixIcon: suffixIcon,

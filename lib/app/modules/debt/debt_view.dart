@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -189,9 +190,11 @@ class DebtView extends GetView<DebtController> {
                   label: 'Jumlah (Rp)',
                   hint: '0',
                   keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Wajib diisi';
                     if (double.tryParse(v) == null) return 'Masukkan angka';
+                    if (v.length > 12) return 'Maks. 12 digit';
                     return null;
                   },
                 ),
@@ -353,6 +356,7 @@ class _SheetField extends StatelessWidget {
   final String hint;
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
+  final List<TextInputFormatter>? inputFormatters;
 
   const _SheetField({
     required this.controller,
@@ -360,6 +364,7 @@ class _SheetField extends StatelessWidget {
     required this.hint,
     this.keyboardType = TextInputType.text,
     this.validator,
+    this.inputFormatters,
   });
 
   @override
@@ -377,6 +382,7 @@ class _SheetField extends StatelessWidget {
           controller: controller,
           keyboardType: keyboardType,
           validator: validator,
+          inputFormatters: inputFormatters,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(color: AppColors.textGrey),

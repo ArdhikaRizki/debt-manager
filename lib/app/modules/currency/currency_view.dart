@@ -132,6 +132,7 @@ class CurrencyView extends GetView<CurrencyController> {
                     ),
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                      LengthLimitingTextInputFormatter(12),
                     ],
                     style: const TextStyle(
                       color: Colors.white,
